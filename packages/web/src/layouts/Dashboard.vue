@@ -17,7 +17,6 @@ import {
   LogOut,
   Sun,
   Moon,
-  Monitor,
   PanelLeftClose,
   PanelLeft,
   Menu,
@@ -84,9 +83,6 @@ const userInitial = computed(() => {
       >
         <div :class="cn('flex h-14 items-center border-b border-sidebar-border', sidebarOpen ? 'justify-between px-3' : 'lg:justify-center px-3 lg:px-2')">
           <RouterLink to="/" :class="cn('flex items-center', sidebarOpen ? 'gap-2' : 'lg:justify-center gap-2 lg:gap-0')" @click="mobileMenuOpen = false">
-            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shrink-0">
-              <Monitor class="h-4 w-4 text-primary-foreground" />
-            </div>
             <span :class="cn('font-semibold text-sidebar-foreground', sidebarOpen ? '' : 'lg:hidden')">Uptime</span>
           </RouterLink>
           <Button
@@ -202,9 +198,6 @@ const userInitial = computed(() => {
           <Menu class="h-5 w-5" />
         </Button>
         <RouterLink to="/" class="flex items-center gap-2">
-          <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <Monitor class="h-4 w-4 text-primary-foreground" />
-          </div>
           <span class="font-semibold">Uptime</span>
         </RouterLink>
       </header>

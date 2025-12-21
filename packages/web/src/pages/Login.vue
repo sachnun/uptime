@@ -4,7 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Monitor, Loader2 } from 'lucide-vue-next'
+import { Loader2 } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
@@ -50,9 +50,6 @@ function loginWithGoogle() {
   <div class="min-h-screen flex items-center justify-center bg-background px-4">
     <div class="w-full max-w-sm">
       <div class="flex flex-col items-center mb-8">
-        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary mb-4">
-          <Monitor class="h-6 w-6 text-primary-foreground" />
-        </div>
         <h1 class="text-2xl font-bold">Uptime</h1>
         <p class="text-muted-foreground mt-1">Sign in to your account</p>
       </div>
