@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { ArrowLeft, Loader2, PlayCircle, CheckCircle, XCircle } from 'lucide-vue-next'
+import { ArrowLeft, Loader2, PlayCircle, CheckCircle, XCircle, Plus, Trash2 } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -32,6 +32,7 @@ const form = ref({
   method: 'GET',
   expectedStatus: 200,
   expectedBody: '',
+  headers: [] as { key: string; value: string }[],
   dnsRecordType: 'A',
   interval: 60,
   timeout: 30,
@@ -54,6 +55,14 @@ const showPort = computed(() => form.value.type === 'tcp')
 const showHttpOptions = computed(() => form.value.type === 'http' || form.value.type === 'https')
 const showDnsOptions = computed(() => form.value.type === 'dns')
 
+function addHeader() {
+  form.value.headers.push({ key: '', value: '' })
+}
+
+function removeHeader(index: number) {
+  form.value.headers.splice(index, 1)
+}
+
 async function loadMonitor() {
   if (!isEdit.value) return
   
@@ -71,6 +80,7 @@ async function loadMonitor() {
       method: monitor.method || 'GET',
       expectedStatus: monitor.expectedStatus || 200,
       expectedBody: monitor.expectedBody || '',
+      headers: monitor.headers ? Object.entries(monitor.headers).map(([key, value]) => ({ key, value })) : [],
       dnsRecordType: monitor.dnsRecordType || 'A',
       interval: monitor.interval,
       timeout: monitor.timeout,
@@ -113,6 +123,17 @@ async function handleSubmit() {
     data.expectedStatus = form.value.expectedStatus
     if (form.value.expectedBody) {
       data.expectedBody = form.value.expectedBody
+    }
+    if (form.value.headers.length > 0) {
+      const headersObj: Record<string, string> = {}
+      for (const h of form.value.headers) {
+        if (h.key.trim()) {
+          headersObj[h.key.trim()] = h.value
+        }
+      }
+      if (Object.keys(headersObj).length > 0) {
+        data.headers = headersObj
+      }
     }
   }
 
@@ -171,6 +192,17 @@ async function handleTest() {
     data.expectedStatus = form.value.expectedStatus
     if (form.value.expectedBody) {
       data.expectedBody = form.value.expectedBody
+    }
+    if (form.value.headers.length > 0) {
+      const headersObj: Record<string, string> = {}
+      for (const h of form.value.headers) {
+        if (h.key.trim()) {
+          headersObj[h.key.trim()] = h.value
+        }
+      }
+      if (Object.keys(headersObj).length > 0) {
+        data.headers = headersObj
+      }
     }
   }
 
@@ -285,6 +317,26 @@ async function handleTest() {
             <Label for="expectedBody">Expected Body (optional)</Label>
             <Input id="expectedBody" v-model="form.expectedBody" placeholder="Text that response must contain" />
             <p class="text-xs text-muted-foreground">Response body must contain this text to be considered successful</p>
+          </div>
+
+          <div v-if="showHttpOptions" class="space-y-3">
+            <div class="flex items-center justify-between">
+              <Label>Custom Headers (optional)</Label>
+              <Button type="button" variant="outline" size="sm" @click="addHeader">
+                <Plus class="h-3 w-3 mr-1" />
+                Add Header
+              </Button>
+            </div>
+            <div v-if="form.headers.length === 0" class="text-sm text-muted-foreground">
+              No custom headers configured
+            </div>
+            <div v-for="(header, index) in form.headers" :key="index" class="flex items-center gap-2">
+              <Input v-model="header.key" placeholder="Header name" class="flex-1" />
+              <Input v-model="header.value" placeholder="Value" class="flex-1" />
+              <Button type="button" variant="ghost" size="icon" class="shrink-0" @click="removeHeader(index)">
+                <Trash2 class="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
           </div>
 
           <div v-if="showDnsOptions" class="space-y-2">

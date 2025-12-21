@@ -22,6 +22,7 @@ export const monitors = sqliteTable('monitors', {
   method: text('method').default('GET'),
   expectedStatus: integer('expected_status').default(200),
   expectedBody: text('expected_body'),
+  headers: text('headers', { mode: 'json' }).$type<Record<string, string>>(),
   dnsRecordType: text('dns_record_type'),
   interval: integer('interval').notNull().default(60),
   timeout: integer('timeout').notNull().default(30),

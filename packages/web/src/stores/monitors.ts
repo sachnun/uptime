@@ -12,6 +12,7 @@ export interface Monitor {
   method?: string
   expectedStatus?: number
   expectedBody?: string
+  headers?: Record<string, string>
   dnsRecordType?: string
   interval: number
   timeout: number

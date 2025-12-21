@@ -221,7 +221,7 @@ Ambil detail monitor.
 
 ### `POST /api/monitors`
 
-Buat monitor baru.
+Create a new monitor.
 
 **Request Body:**
 ```json
@@ -232,6 +232,10 @@ Buat monitor baru.
   "method": "GET",
   "expectedStatus": 200,
   "expectedBody": "OK",
+  "headers": {
+    "Authorization": "Bearer token123",
+    "X-Custom-Header": "value"
+  },
   "interval": 60,
   "timeout": 30,
   "retries": 1,

@@ -14,12 +14,18 @@ export async function checkHttp(monitor: Monitor): Promise<MonitorCheckResult> {
   const timeoutId = setTimeout(() => controller.abort(), (monitor.timeout || 30) * 1000);
 
   try {
+    const headers: Record<string, string> = {
+      'User-Agent': 'Uptime-Monitor/1.0',
+    };
+
+    if (monitor.headers) {
+      Object.assign(headers, monitor.headers);
+    }
+
     const response = await fetch(url, {
       method: monitor.method || 'GET',
       signal: controller.signal,
-      headers: {
-        'User-Agent': 'Uptime-Monitor/1.0',
-      },
+      headers,
     });
 
     clearTimeout(timeoutId);

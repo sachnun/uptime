@@ -25,6 +25,7 @@ const createMonitorSchema = z.object({
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH']).default('GET'),
   expectedStatus: z.number().int().min(100).max(599).default(200),
   expectedBody: z.string().max(500).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
   dnsRecordType: z.enum(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS']).optional(),
   interval: z.number().int().min(60).max(86400).default(60),
   timeout: z.number().int().min(1).max(120).default(30),
@@ -43,6 +44,7 @@ const testMonitorSchema = z.object({
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH']).default('GET'),
   expectedStatus: z.number().int().min(100).max(599).default(200),
   expectedBody: z.string().max(500).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
   dnsRecordType: z.enum(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS']).optional(),
   timeout: z.number().int().min(1).max(30).default(10),
 });
@@ -295,6 +297,7 @@ monitorsRoute.post('/test', zValidator('json', testMonitorSchema), async (c) => 
     method: data.method || 'GET',
     expectedStatus: data.expectedStatus || 200,
     expectedBody: data.expectedBody || null,
+    headers: data.headers || null,
     dnsRecordType: data.dnsRecordType || null,
     interval: 60,
     timeout: data.timeout || 10,
