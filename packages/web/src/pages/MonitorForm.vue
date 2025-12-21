@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
-import { useMonitorsStore, type Monitor } from '@/stores/monitors'
+import { useMonitorsStore, type Monitor, type TestMonitorResult } from '@/stores/monitors'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
-import { ArrowLeft, Loader2 } from 'lucide-vue-next'
+import { ArrowLeft, Loader2, PlayCircle, CheckCircle, XCircle } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,7 +19,9 @@ const monitorId = computed(() => parseInt(route.params.id as string))
 
 const loading = ref(false)
 const saving = ref(false)
+const testing = ref(false)
 const error = ref('')
+const testResult = ref<TestMonitorResult | null>(null)
 
 const form = ref({
   name: '',
@@ -29,6 +31,7 @@ const form = ref({
   port: 80,
   method: 'GET',
   expectedStatus: 200,
+  expectedBody: '',
   dnsRecordType: 'A',
   interval: 60,
   timeout: 30,
@@ -67,6 +70,7 @@ async function loadMonitor() {
       port: monitor.port || 80,
       method: monitor.method || 'GET',
       expectedStatus: monitor.expectedStatus || 200,
+      expectedBody: monitor.expectedBody || '',
       dnsRecordType: monitor.dnsRecordType || 'A',
       interval: monitor.interval,
       timeout: monitor.timeout,
@@ -107,6 +111,9 @@ async function handleSubmit() {
     data.url = form.value.url
     data.method = form.value.method
     data.expectedStatus = form.value.expectedStatus
+    if (form.value.expectedBody) {
+      data.expectedBody = form.value.expectedBody
+    }
   }
 
   if (showHostname.value) {
@@ -138,6 +145,55 @@ async function handleSubmit() {
 
 onMounted(loadMonitor)
 watch(() => route.params.id, loadMonitor)
+
+async function handleTest() {
+  if (showUrl.value && !form.value.url) {
+    error.value = 'URL is required to test'
+    return
+  }
+  if (showHostname.value && !form.value.hostname) {
+    error.value = 'Hostname is required to test'
+    return
+  }
+
+  testing.value = true
+  error.value = ''
+  testResult.value = null
+
+  const data: Partial<Monitor> = {
+    type: form.value.type,
+    timeout: Math.min(form.value.timeout, 30),
+  }
+
+  if (showUrl.value) {
+    data.url = form.value.url
+    data.method = form.value.method
+    data.expectedStatus = form.value.expectedStatus
+    if (form.value.expectedBody) {
+      data.expectedBody = form.value.expectedBody
+    }
+  }
+
+  if (showHostname.value) {
+    data.hostname = form.value.hostname
+  }
+
+  if (showPort.value) {
+    data.port = form.value.port
+  }
+
+  if (showDnsOptions.value) {
+    data.dnsRecordType = form.value.dnsRecordType
+  }
+
+  try {
+    testResult.value = await monitorsStore.testMonitor(data)
+  } catch (e) {
+    error.value = e instanceof Error ? e.message : 'Failed to test monitor'
+  } finally {
+    testing.value = false
+  }
+}
 </script>
 
 <template>
@@ -225,6 +281,12 @@ watch(() => route.params.id, loadMonitor)
             </div>
           </div>
 
+          <div v-if="showHttpOptions" class="space-y-2">
+            <Label for="expectedBody">Expected Body (optional)</Label>
+            <Input id="expectedBody" v-model="form.expectedBody" placeholder="Text that response must contain" />
+            <p class="text-xs text-muted-foreground">Response body must contain this text to be considered successful</p>
+          </div>
+
           <div v-if="showDnsOptions" class="space-y-2">
             <Label>DNS Record Type</Label>
             <Select v-model="form.dnsRecordType">
@@ -257,6 +319,38 @@ watch(() => route.params.id, loadMonitor)
             <div class="space-y-2">
               <Label for="retries">Retries</Label>
               <Input id="retries" v-model.number="form.retries" type="number" min="0" max="10" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Test Connection</CardTitle>
+          <CardDescription>Test your monitor configuration before saving</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="flex flex-col gap-4">
+            <Button type="button" variant="outline" :disabled="testing" @click="handleTest">
+              <Loader2 v-if="testing" class="mr-2 h-4 w-4 animate-spin" />
+              <PlayCircle v-else class="mr-2 h-4 w-4" />
+              {{ testing ? 'Testing...' : 'Test Monitor' }}
+            </Button>
+
+            <div v-if="testResult" :class="[
+              'p-4 rounded-lg border',
+              testResult.success ? 'bg-success/10 border-success/20' : 'bg-destructive/10 border-destructive/20'
+            ]">
+              <div class="flex items-center gap-2 mb-2">
+                <CheckCircle v-if="testResult.success" class="h-5 w-5 text-success" />
+                <XCircle v-else class="h-5 w-5 text-destructive" />
+                <span class="font-medium">{{ testResult.success ? 'Success' : 'Failed' }}</span>
+              </div>
+              <div class="text-sm text-muted-foreground space-y-1">
+                <p v-if="testResult.statusCode">Status: {{ testResult.statusCode }}</p>
+                <p v-if="testResult.responseTime">Response Time: {{ testResult.responseTime }}ms</p>
+                <p v-if="testResult.message">{{ testResult.message }}</p>
+              </div>
             </div>
           </div>
         </CardContent>

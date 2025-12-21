@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { eq, desc, and, gte } from 'drizzle-orm';
-import { createDb, heartbeats, monitors } from '../db';
+import { createDb, heartbeats, monitors, incidents, hourlyStats } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import type { Env } from '../types';
 
@@ -91,6 +91,61 @@ heartbeatsRoute.get('/:monitorId/stats', async (c) => {
     last7d: calcStats(beats7d),
     last30d: calcStats(beats30d),
   });
+});
+
+heartbeatsRoute.get('/:monitorId/incidents', async (c) => {
+  const monitorId = parseId(c.req.param('monitorId'));
+  if (monitorId === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
+  const user = c.get('user');
+  const db = createDb(c.env.DB);
+
+  const monitor = await db.query.monitors.findFirst({
+    where: and(eq(monitors.id, monitorId), eq(monitors.userId, user.sub)),
+  });
+
+  if (!monitor) {
+    return c.json({ error: 'Monitor not found' }, 404);
+  }
+
+  const result = await db.query.incidents.findMany({
+    where: eq(incidents.monitorId, monitorId),
+    orderBy: [desc(incidents.startedAt)],
+    limit: 50,
+  });
+
+  return c.json(result);
+});
+
+heartbeatsRoute.get('/:monitorId/hourly', async (c) => {
+  const monitorId = parseId(c.req.param('monitorId'));
+  if (monitorId === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
+  const days = parseInt(c.req.query('days') || '7');
+  const user = c.get('user');
+  const db = createDb(c.env.DB);
+
+  const monitor = await db.query.monitors.findFirst({
+    where: and(eq(monitors.id, monitorId), eq(monitors.userId, user.sub)),
+  });
+
+  if (!monitor) {
+    return c.json({ error: 'Monitor not found' }, 404);
+  }
+
+  const since = Date.now() - days * 24 * 60 * 60 * 1000;
+
+  const result = await db.query.hourlyStats.findMany({
+    where: and(
+      eq(hourlyStats.monitorId, monitorId),
+      gte(hourlyStats.hour, since)
+    ),
+    orderBy: [desc(hourlyStats.hour)],
+  });
+
+  return c.json(result);
 });
 
 export { heartbeatsRoute };

@@ -28,11 +28,33 @@ export async function checkHttp(monitor: Monitor): Promise<MonitorCheckResult> {
     const expectedStatus = monitor.expectedStatus || 200;
     const statusOk = response.status === expectedStatus;
 
+    if (!statusOk) {
+      return {
+        status: false,
+        statusCode: response.status,
+        responseTime,
+        message: `Expected ${expectedStatus}, got ${response.status}`,
+      };
+    }
+
+    if (monitor.expectedBody) {
+      const body = await response.text();
+      const bodyMatch = body.includes(monitor.expectedBody);
+      if (!bodyMatch) {
+        return {
+          status: false,
+          statusCode: response.status,
+          responseTime,
+          message: `Response body does not contain expected text`,
+        };
+      }
+    }
+
     return {
-      status: statusOk,
+      status: true,
       statusCode: response.status,
       responseTime,
-      message: statusOk ? 'OK' : `Expected ${expectedStatus}, got ${response.status}`,
+      message: 'OK',
     };
   } catch (error) {
     clearTimeout(timeoutId);

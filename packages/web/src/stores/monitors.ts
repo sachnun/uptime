@@ -11,6 +11,7 @@ export interface Monitor {
   port?: number
   method?: string
   expectedStatus?: number
+  expectedBody?: string
   dnsRecordType?: string
   interval: number
   timeout: number
@@ -21,6 +22,13 @@ export interface Monitor {
   latestHeartbeat?: Heartbeat
   uptime: number
   avgResponseTime: number
+}
+
+export interface TestMonitorResult {
+  success: boolean
+  statusCode?: number
+  responseTime?: number
+  message?: string
 }
 
 export interface Heartbeat {
@@ -96,6 +104,10 @@ export const useMonitorsStore = defineStore('monitors', () => {
     return await api.get(`/api/heartbeats/${monitorId}?hours=${hours}`)
   }
 
+  async function testMonitor(data: Partial<Monitor>): Promise<TestMonitorResult> {
+    return await api.post('/api/monitors/test', data)
+  }
+
   function $reset() {
     monitors.value = []
     loading.value = false
@@ -114,6 +126,7 @@ export const useMonitorsStore = defineStore('monitors', () => {
     pauseMonitor,
     resumeMonitor,
     getHeartbeats,
+    testMonitor,
     $reset,
   }
 })

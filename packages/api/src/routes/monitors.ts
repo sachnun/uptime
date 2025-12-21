@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { eq, desc, and, inArray } from 'drizzle-orm';
 import { createDb, monitors, heartbeats, monitorNotifications, notifications } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
+import { runMonitorCheck } from '../monitors';
 import type { Env } from '../types';
 
 function parseId(id: string): number | null {
@@ -23,12 +24,27 @@ const createMonitorSchema = z.object({
   port: z.number().int().min(1).max(65535).optional(),
   method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH']).default('GET'),
   expectedStatus: z.number().int().min(100).max(599).default(200),
+  expectedBody: z.string().max(500).optional(),
   dnsRecordType: z.enum(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS']).optional(),
   interval: z.number().int().min(60).max(86400).default(60),
   timeout: z.number().int().min(1).max(120).default(30),
   retries: z.number().int().min(0).max(5).default(0),
   active: z.boolean().default(true),
+  maintenanceStart: z.string().datetime().optional(),
+  maintenanceEnd: z.string().datetime().optional(),
   notificationIds: z.array(z.number()).optional(),
+});
+
+const testMonitorSchema = z.object({
+  type: z.enum(['http', 'https', 'tcp', 'dns']),
+  url: z.string().url().optional(),
+  hostname: z.string().optional(),
+  port: z.number().int().min(1).max(65535).optional(),
+  method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH']).default('GET'),
+  expectedStatus: z.number().int().min(100).max(599).default(200),
+  expectedBody: z.string().max(500).optional(),
+  dnsRecordType: z.enum(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS']).optional(),
+  timeout: z.number().int().min(1).max(30).default(10),
 });
 
 const updateMonitorSchema = createMonitorSchema.partial();
@@ -106,7 +122,7 @@ monitorsRoute.get('/:id', async (c) => {
 monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
   const data = c.req.valid('json');
   const user = c.get('user');
-  const { notificationIds, ...monitorData } = data;
+  const { notificationIds, maintenanceStart, maintenanceEnd, ...monitorData } = data;
   const db = createDb(c.env.DB);
 
   if (notificationIds && notificationIds.length > 0) {
@@ -121,7 +137,14 @@ monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
     }
   }
 
-  const result = await db.insert(monitors).values({ ...monitorData, userId: user.sub }).returning();
+  const insertData = {
+    ...monitorData,
+    userId: user.sub,
+    maintenanceStart: maintenanceStart ? new Date(maintenanceStart) : null,
+    maintenanceEnd: maintenanceEnd ? new Date(maintenanceEnd) : null,
+  };
+
+  const result = await db.insert(monitors).values(insertData).returning();
   const monitor = result[0];
 
   if (notificationIds && notificationIds.length > 0) {
@@ -143,7 +166,7 @@ monitorsRoute.put('/:id', zValidator('json', updateMonitorSchema), async (c) => 
   }
   const user = c.get('user');
   const data = c.req.valid('json');
-  const { notificationIds, ...monitorData } = data;
+  const { notificationIds, maintenanceStart, maintenanceEnd, ...monitorData } = data;
   const db = createDb(c.env.DB);
 
   const existing = await db.query.monitors.findFirst({
@@ -166,9 +189,20 @@ monitorsRoute.put('/:id', zValidator('json', updateMonitorSchema), async (c) => 
     }
   }
 
+  const updateData: Record<string, unknown> = {
+    ...monitorData,
+    updatedAt: new Date(),
+  };
+  if (maintenanceStart !== undefined) {
+    updateData.maintenanceStart = maintenanceStart ? new Date(maintenanceStart) : null;
+  }
+  if (maintenanceEnd !== undefined) {
+    updateData.maintenanceEnd = maintenanceEnd ? new Date(maintenanceEnd) : null;
+  }
+
   const result = await db
     .update(monitors)
-    .set({ ...monitorData, updatedAt: new Date() })
+    .set(updateData)
     .where(eq(monitors.id, id))
     .returning();
 
@@ -245,6 +279,41 @@ monitorsRoute.post('/:id/resume', async (c) => {
 
   await db.update(monitors).set({ active: true }).where(eq(monitors.id, id));
   return c.json({ success: true });
+});
+
+monitorsRoute.post('/test', zValidator('json', testMonitorSchema), async (c) => {
+  const data = c.req.valid('json');
+
+  const mockMonitor = {
+    id: 0,
+    userId: 0,
+    name: 'Test',
+    type: data.type,
+    url: data.url || null,
+    hostname: data.hostname || null,
+    port: data.port || null,
+    method: data.method || 'GET',
+    expectedStatus: data.expectedStatus || 200,
+    expectedBody: data.expectedBody || null,
+    dnsRecordType: data.dnsRecordType || null,
+    interval: 60,
+    timeout: data.timeout || 10,
+    retries: 0,
+    active: true,
+    maintenanceStart: null,
+    maintenanceEnd: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const result = await runMonitorCheck(mockMonitor);
+
+  return c.json({
+    success: result.status,
+    statusCode: result.statusCode,
+    responseTime: result.responseTime,
+    message: result.message,
+  });
 });
 
 export { monitorsRoute };
