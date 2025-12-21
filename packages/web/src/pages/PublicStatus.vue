@@ -60,7 +60,7 @@ async function fetchStatus() {
   error.value = ''
 
   try {
-    const response = await fetch(`/api/public/status/${slug.value}`)
+    const response = await fetch(`/api/status-pages/public/${slug.value}`)
     if (!response.ok) {
       error.value = response.status === 404 ? 'Status page not found' : 'Failed to load status page'
       return
