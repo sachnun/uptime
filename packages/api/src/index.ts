@@ -33,7 +33,7 @@ app.notFound(async (c) => {
     return c.json({ error: 'Not found' }, 404);
   }
   
-  return c.env.ASSETS.fetch(c.req.raw);
+  return c.env.ASSETS.fetch(new Request(new URL('/', c.req.url)));
 });
 
 export default {
