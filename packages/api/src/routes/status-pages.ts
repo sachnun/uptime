@@ -80,7 +80,17 @@ statusPagesRoute.get('/', async (c) => {
   const pages = await db.query.statusPages.findMany({
     orderBy: [desc(statusPages.createdAt)],
   });
-  return c.json(pages);
+
+  const pagesWithMonitors = await Promise.all(
+    pages.map(async (page) => {
+      const pageMonitors = await db.query.statusPageMonitors.findMany({
+        where: eq(statusPageMonitors.statusPageId, page.id),
+      });
+      return { ...page, monitorIds: pageMonitors.map(pm => pm.monitorId) };
+    })
+  );
+
+  return c.json(pagesWithMonitors);
 });
 
 statusPagesRoute.get('/:id', async (c) => {
@@ -128,7 +138,7 @@ statusPagesRoute.post('/', zValidator('json', createStatusPageSchema), async (c)
     );
   }
 
-  return c.json(page, 201);
+  return c.json({ ...page, monitorIds: monitorIds ?? [] }, 201);
 });
 
 statusPagesRoute.put('/:id', zValidator('json', updateStatusPageSchema), async (c) => {
@@ -173,7 +183,11 @@ statusPagesRoute.put('/:id', zValidator('json', updateStatusPageSchema), async (
     }
   }
 
-  return c.json(result[0]);
+  const updatedMonitors = await db.query.statusPageMonitors.findMany({
+    where: eq(statusPageMonitors.statusPageId, id),
+  });
+
+  return c.json({ ...result[0], monitorIds: updatedMonitors.map(pm => pm.monitorId) });
 });
 
 statusPagesRoute.delete('/:id', async (c) => {
