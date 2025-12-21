@@ -1,15 +1,25 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useDarkMode, type Theme } from '@/lib/darkMode'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
-import { Clock, Key, Download, Trash2 } from 'lucide-vue-next'
+import { Clock, Key, Download, Trash2, Loader2 } from 'lucide-vue-next'
 
+const router = useRouter()
 const authStore = useAuthStore()
 const { theme, setTheme } = useDarkMode()
+
+const deleteDialogOpen = ref(false)
+const confirmText = ref('')
+const deleting = ref(false)
 
 const themes: { value: Theme; label: string }[] = [
   { value: 'light', label: 'Light' },
@@ -20,6 +30,18 @@ const themes: { value: Theme; label: string }[] = [
 function handleThemeChange(value: unknown) {
   if (typeof value === 'string') {
     setTheme(value as Theme)
+  }
+}
+
+async function handleDeleteAccount() {
+  if (confirmText.value !== 'DELETE') return
+  deleting.value = true
+  try {
+    await authStore.deleteAccount()
+    router.push('/login')
+  } finally {
+    deleting.value = false
+    deleteDialogOpen.value = false
   }
 }
 </script>
@@ -106,10 +128,35 @@ function handleThemeChange(value: unknown) {
           <CardDescription>These actions are irreversible. Please proceed with caution.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button variant="destructive" disabled>
-            <Trash2 class="h-4 w-4 mr-2" />
-            Delete Account
-          </Button>
+          <Dialog v-model:open="deleteDialogOpen">
+            <DialogTrigger as-child>
+              <Button variant="destructive">
+                <Trash2 class="h-4 w-4 mr-2" />
+                Delete Account
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Account</DialogTitle>
+                <DialogDescription>
+                  This will permanently delete your account and all associated data including monitors, notifications, and status pages. This action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div class="py-4">
+                <Label>Type <span class="font-mono font-bold">DELETE</span> to confirm</Label>
+                <Input v-model="confirmText" placeholder="DELETE" class="mt-2" />
+              </div>
+              <DialogFooter>
+                <DialogClose as-child>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button variant="destructive" :disabled="confirmText !== 'DELETE' || deleting" @click="handleDeleteAccount">
+                  <Loader2 v-if="deleting" class="h-4 w-4 mr-2 animate-spin" />
+                  Delete Account
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </CardContent>
       </Card>
     </div>

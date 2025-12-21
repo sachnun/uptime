@@ -39,6 +39,11 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('token')
   }
 
+  async function deleteAccount() {
+    await api.delete('/api/auth/me')
+    logout()
+  }
+
   return {
     user,
     token,
@@ -46,5 +51,6 @@ export const useAuthStore = defineStore('auth', () => {
     setToken,
     checkAuth,
     logout,
+    deleteAccount,
   }
 })
