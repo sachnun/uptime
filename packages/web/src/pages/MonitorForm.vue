@@ -253,7 +253,7 @@ watch(() => route.params.id, loadMonitor)
               <input
                 v-model.number="form.interval"
                 type="number"
-                min="10"
+                min="60"
                 class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
               />
             </div>
