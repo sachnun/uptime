@@ -1,0 +1,1 @@
+export { handleScheduled } from './handler';

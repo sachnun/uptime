@@ -1,0 +1,14 @@
+{
+  "name": "uptime",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "db:generate": "pnpm --filter @uptime/api db:generate",
+    "db:migrate": "pnpm --filter @uptime/api db:migrate",
+    "deploy": "pnpm --filter @uptime/api deploy"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

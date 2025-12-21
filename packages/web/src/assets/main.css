@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #f8fafc;
+  --color-bg-dark: #1e293b;
+  --color-sidebar: #0f172a;
+  --color-card: #ffffff;
+  --color-card-dark: #334155;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dark body {
+  background-color: var(--color-bg-dark);
+}
+
+.status-up {
+  @apply bg-green-500;
+}
+
+.status-down {
+  @apply bg-red-500;
+}
+
+.status-pending {
+  @apply bg-yellow-500;
+}
+
+.status-maintenance {
+  @apply bg-blue-500;
+}
+
+.heartbeat-bar {
+  @apply w-1 h-6 rounded-sm transition-all duration-200;
+}
+
+.heartbeat-bar:hover {
+  @apply scale-y-125;
+}
