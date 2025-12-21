@@ -43,8 +43,8 @@ onMounted(() => {
       <Card>
         <CardContent class="pt-6">
           <div class="flex items-center gap-4">
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-green-500/10">
-              <CheckCircle class="h-6 w-6 text-green-500" />
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-success/10">
+              <CheckCircle class="h-6 w-6 text-success" />
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Up</p>
@@ -57,8 +57,8 @@ onMounted(() => {
       <Card>
         <CardContent class="pt-6">
           <div class="flex items-center gap-4">
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-red-500/10">
-              <XCircle class="h-6 w-6 text-red-500" />
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-danger/10">
+              <XCircle class="h-6 w-6 text-danger" />
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Down</p>
@@ -71,8 +71,8 @@ onMounted(() => {
       <Card>
         <CardContent class="pt-6">
           <div class="flex items-center gap-4">
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-yellow-500/10">
-              <PauseCircle class="h-6 w-6 text-yellow-500" />
+            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-warning/10">
+              <PauseCircle class="h-6 w-6 text-warning" />
             </div>
             <div>
               <p class="text-sm text-muted-foreground">Paused</p>

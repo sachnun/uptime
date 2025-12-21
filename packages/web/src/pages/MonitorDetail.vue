@@ -20,10 +20,10 @@ const monitorId = computed(() => parseInt(route.params.id as string))
 const monitor = computed(() => monitorsStore.monitors.find(m => m.id === monitorId.value))
 
 const status = computed(() => {
-  if (!monitor.value?.active) return { text: 'Paused', variant: 'warning' as const, color: 'bg-yellow-500' }
-  if (monitor.value?.latestHeartbeat?.status === true) return { text: 'Up', variant: 'success' as const, color: 'bg-green-500' }
-  if (monitor.value?.latestHeartbeat?.status === false) return { text: 'Down', variant: 'destructive' as const, color: 'bg-red-500' }
-  return { text: 'Pending', variant: 'secondary' as const, color: 'bg-gray-400' }
+  if (!monitor.value?.active) return { text: 'Paused', variant: 'warning' as const, color: 'bg-warning' }
+  if (monitor.value?.latestHeartbeat?.status === true) return { text: 'Up', variant: 'success' as const, color: 'bg-success' }
+  if (monitor.value?.latestHeartbeat?.status === false) return { text: 'Down', variant: 'destructive' as const, color: 'bg-danger' }
+  return { text: 'Pending', variant: 'secondary' as const, color: 'bg-muted-foreground' }
 })
 
 async function loadData() {
@@ -159,18 +159,18 @@ watch(() => route.params.id, loadData)
         <CardTitle>Response Time (Last 24h)</CardTitle>
       </CardHeader>
       <CardContent>
-        <div class="flex items-end gap-0.5 h-24">
-          <div
-            v-for="hb in heartbeats.slice().reverse().slice(0, 90)"
-            :key="hb.id"
-            :class="cn(
-              'flex-1 min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',
-              hb.status ? 'bg-green-500 hover:bg-green-400' : 'bg-red-500 hover:bg-red-400'
-            )"
-            :style="{ height: `${Math.min(100, Math.max(10, (hb.responseTime || 0) / 10))}%` }"
-            :title="`${formatMs(hb.responseTime || 0)} - ${formatDate(hb.createdAt)}`"
-          />
-        </div>
+          <div class="flex items-end gap-0.5 h-24">
+            <div
+              v-for="hb in heartbeats.slice().reverse().slice(0, 90)"
+              :key="hb.id"
+              :class="cn(
+                'flex-1 min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',
+                hb.status ? 'bg-success hover:bg-success/80' : 'bg-danger hover:bg-danger/80'
+              )"
+              :style="{ height: `${Math.min(100, Math.max(10, (hb.responseTime || 0) / 10))}%` }"
+              :title="`${formatMs(hb.responseTime || 0)} - ${formatDate(hb.createdAt)}`"
+            />
+          </div>
       </CardContent>
     </Card>
 
@@ -185,7 +185,7 @@ watch(() => route.params.id, loadData)
             :key="hb.id"
             class="flex items-center gap-4 px-6 py-4"
           >
-            <div :class="cn('h-2.5 w-2.5 rounded-full', hb.status ? 'bg-green-500' : 'bg-red-500')" />
+            <div :class="cn('h-2.5 w-2.5 rounded-full', hb.status ? 'bg-success' : 'bg-danger')" />
             <div class="flex-1">
               <p class="text-sm font-medium">
                 {{ hb.status ? 'Up' : 'Down' }}

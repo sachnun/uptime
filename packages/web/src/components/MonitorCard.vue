@@ -20,10 +20,10 @@ const status = computed(() => {
 })
 
 const statusConfig = {
-  up: { bg: 'bg-green-500', text: 'Up', variant: 'success' as const },
-  down: { bg: 'bg-red-500', text: 'Down', variant: 'destructive' as const },
-  paused: { bg: 'bg-yellow-500', text: 'Paused', variant: 'warning' as const },
-  pending: { bg: 'bg-gray-400', text: 'Pending', variant: 'secondary' as const },
+  up: { bg: 'bg-success', text: 'Up', variant: 'success' as const },
+  down: { bg: 'bg-danger', text: 'Down', variant: 'destructive' as const },
+  paused: { bg: 'bg-warning', text: 'Paused', variant: 'warning' as const },
+  pending: { bg: 'bg-muted-foreground', text: 'Pending', variant: 'secondary' as const },
 }
 
 const typeIcons = {
@@ -45,9 +45,9 @@ const monitorTypeLabel = computed(() => {
 
 const uptimeColor = computed(() => {
   const uptime = props.monitor.uptime
-  if (uptime >= 99) return 'text-green-600 dark:text-green-400'
-  if (uptime >= 95) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-red-600 dark:text-red-400'
+  if (uptime >= 99) return 'text-success'
+  if (uptime >= 95) return 'text-warning'
+  return 'text-danger'
 })
 </script>
 

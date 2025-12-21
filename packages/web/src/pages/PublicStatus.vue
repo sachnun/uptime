@@ -42,9 +42,9 @@ const overallStatus = computed(() => {
 })
 
 const statusConfig = {
-  operational: { text: 'All Systems Operational', icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-500' },
-  degraded: { text: 'Partial System Outage', icon: XCircle, color: 'text-red-600', bg: 'bg-red-500' },
-  unknown: { text: 'Status Unknown', icon: AlertCircle, color: 'text-gray-600', bg: 'bg-gray-400' },
+  operational: { text: 'All Systems Operational', icon: CheckCircle, color: 'text-success', bg: 'bg-success' },
+  degraded: { text: 'Partial System Outage', icon: XCircle, color: 'text-danger', bg: 'bg-danger' },
+  unknown: { text: 'Status Unknown', icon: AlertCircle, color: 'text-muted-foreground', bg: 'bg-muted-foreground' },
 }
 
 const effectiveTheme = computed(() => {
@@ -118,7 +118,7 @@ onMounted(fetchStatus)
               <div
                 :class="cn(
                   'h-3 w-3 rounded-full',
-                  monitor.status === true ? 'bg-green-500' : monitor.status === false ? 'bg-red-500' : 'bg-gray-400'
+                  monitor.status === true ? 'bg-success' : monitor.status === false ? 'bg-danger' : 'bg-muted-foreground'
                 )"
               />
               <span class="font-medium">{{ monitor.name }}</span>
@@ -141,7 +141,7 @@ onMounted(fetchStatus)
               :key="hb.id"
               :class="cn(
                 'flex-1 h-full rounded-sm transition-all',
-                hb.status ? 'bg-green-500 hover:bg-green-400' : 'bg-red-500 hover:bg-red-400'
+                hb.status ? 'bg-success hover:bg-success/80' : 'bg-danger hover:bg-danger/80'
               )"
               :title="`${hb.status ? 'Up' : 'Down'} - ${formatTime(hb.createdAt)}`"
             />

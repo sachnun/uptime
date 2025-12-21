@@ -29,8 +29,8 @@ export function formatMs(ms: number): string {
 }
 
 export function getStatusColor(status: boolean | null): string {
-  if (status === null) return 'bg-gray-400'
-  return status ? 'bg-green-500' : 'bg-red-500'
+  if (status === null) return 'bg-muted-foreground'
+  return status ? 'bg-success' : 'bg-danger'
 }
 
 export function getStatusText(status: boolean | null): string {
