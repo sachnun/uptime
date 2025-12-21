@@ -6,7 +6,7 @@
     "build": "pnpm --filter @uptime/web build && pnpm --filter @uptime/api build",
     "db:generate": "pnpm --filter @uptime/api db:generate",
     "db:migrate": "pnpm --filter @uptime/api db:migrate",
-    "deploy": "pnpm --filter @uptime/api deploy"
+    "deploy": "pnpm --filter @uptime/api run deploy"
   },
   "devDependencies": {
     "typescript": "^5.7.2"
