@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useDarkMode } from '@/lib/darkMode'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { isDark, setTheme, theme } = useDarkMode()
 const sidebarOpen = ref(true)
 
 const navigation = [
@@ -13,6 +15,16 @@ const navigation = [
   { name: 'Status Pages', href: '/status-pages', icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z' },
   { name: 'Settings', href: '/settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
 ]
+
+function toggleTheme() {
+  if (theme.value === 'system') {
+    setTheme('dark')
+  } else if (theme.value === 'dark') {
+    setTheme('light')
+  } else {
+    setTheme('system')
+  }
+}
 
 function handleLogout() {
   authStore.logout()
@@ -60,6 +72,21 @@ function handleLogout() {
       </nav>
 
       <div class="border-t border-slate-700 p-4">
+        <div class="flex items-center gap-3 mb-3">
+          <button
+            @click="toggleTheme"
+            class="flex items-center justify-center h-9 w-9 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+            :title="`Theme: ${theme}`"
+          >
+            <svg v-if="isDark" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <svg v-else class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </button>
+          <span v-if="sidebarOpen" class="text-xs text-slate-500 capitalize">{{ theme }}</span>
+        </div>
         <div class="flex items-center gap-3">
           <div class="h-9 w-9 rounded-full bg-slate-700 flex items-center justify-center">
             <span class="text-sm font-medium text-white">{{ authStore.user?.username?.charAt(0).toUpperCase() }}</span>

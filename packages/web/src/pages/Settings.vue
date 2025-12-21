@@ -1,7 +1,20 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
+import { useDarkMode, type Theme } from '@/lib/darkMode'
 
 const authStore = useAuthStore()
+const { theme, setTheme } = useDarkMode()
+
+const themes: { value: Theme; label: string }[] = [
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'system', label: 'System' },
+]
+
+function handleThemeChange(event: Event) {
+  const target = event.target as HTMLSelectElement
+  setTheme(target.value as Theme)
+}
 </script>
 
 <template>
@@ -38,7 +51,13 @@ const authStore = useAuthStore()
           </div>
           <div class="flex items-center justify-between py-2 border-t border-slate-200 dark:border-slate-700">
             <span class="text-slate-600 dark:text-slate-400">Theme</span>
-            <span class="text-slate-900 dark:text-white font-medium">System</span>
+            <select
+              :value="theme"
+              @change="handleThemeChange"
+              class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
+            >
+              <option v-for="t in themes" :key="t.value" :value="t.value">{{ t.label }}</option>
+            </select>
           </div>
         </div>
       </div>
