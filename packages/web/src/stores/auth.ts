@@ -4,7 +4,9 @@ import { api } from '@/lib/api'
 
 interface User {
   id: number
-  username: string
+  email: string
+  name: string | null
+  avatar: string | null
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -13,18 +15,9 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
-  async function login(username: string, password: string) {
-    const response = await api.post<{ token: string; user: User }>('/api/auth/login', { username, password })
-    token.value = response.token
-    user.value = response.user
-    localStorage.setItem('token', response.token)
-  }
-
-  async function register(username: string, password: string) {
-    const response = await api.post<{ token: string; user: User }>('/api/auth/register', { username, password })
-    token.value = response.token
-    user.value = response.user
-    localStorage.setItem('token', response.token)
+  function setToken(newToken: string) {
+    token.value = newToken
+    localStorage.setItem('token', newToken)
   }
 
   async function checkAuth() {
@@ -40,15 +33,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function checkSetup(): Promise<boolean> {
-    try {
-      const response = await api.get<{ needsSetup: boolean }>('/api/auth/setup')
-      return response.needsSetup
-    } catch {
-      return false
-    }
-  }
-
   function logout() {
     token.value = null
     user.value = null
@@ -59,10 +43,8 @@ export const useAuthStore = defineStore('auth', () => {
     user,
     token,
     isAuthenticated,
-    login,
-    register,
+    setToken,
     checkAuth,
-    checkSetup,
     logout,
   }
 })

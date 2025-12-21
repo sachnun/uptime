@@ -11,12 +11,6 @@ const router = createRouter({
       meta: { guest: true },
     },
     {
-      path: '/setup',
-      name: 'setup',
-      component: () => import('@/pages/Setup.vue'),
-      meta: { guest: true },
-    },
-    {
       path: '/',
       component: () => import('@/layouts/Dashboard.vue'),
       meta: { requiresAuth: true },
@@ -74,12 +68,7 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    const needsSetup = await authStore.checkSetup()
-    if (needsSetup) {
-      next({ name: 'setup' })
-    } else {
-      next({ name: 'login' })
-    }
+    next({ name: 'login' })
   } else if (to.meta.guest && authStore.isAuthenticated) {
     next({ name: 'dashboard' })
   } else {

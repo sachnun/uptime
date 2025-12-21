@@ -20,6 +20,7 @@
     "crons": ["* * * * *"]
   },
   "vars": {
-    "JWT_SECRET": "change-this-secret-in-production"
+    "GITHUB_CLIENT_ID": "Ov23liIyCkelcTh1YDCQ",
+    "GOOGLE_CLIENT_ID": ""
   }
 }

@@ -2,6 +2,10 @@ export type Env = {
   DB: D1Database;
   JWT_SECRET: string;
   ASSETS: Fetcher;
+  GITHUB_CLIENT_ID: string;
+  GITHUB_CLIENT_SECRET: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
 };
 
 export type MonitorType = 'http' | 'https' | 'tcp' | 'dns';
@@ -17,7 +21,7 @@ export type MonitorCheckResult = {
 
 export type JWTPayload = {
   sub: number;
-  username: string;
+  email: string;
   exp: number;
   iat: number;
 };

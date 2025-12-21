@@ -53,7 +53,10 @@ function handleLogout() {
   router.push('/login')
 }
 
-const userInitial = computed(() => authStore.user?.username?.charAt(0).toUpperCase() || 'U')
+const userInitial = computed(() => {
+  const name = authStore.user?.name || authStore.user?.email || ''
+  return name.charAt(0).toUpperCase() || 'U'
+})
 </script>
 
 <template>
@@ -143,7 +146,7 @@ const userInitial = computed(() => authStore.user?.username?.charAt(0).toUpperCa
                   <AvatarFallback class="text-xs bg-sidebar-accent text-sidebar-accent-foreground">{{ userInitial }}</AvatarFallback>
                 </Avatar>
               </TooltipTrigger>
-              <TooltipContent side="right">{{ authStore.user?.username }}</TooltipContent>
+              <TooltipContent side="right">{{ authStore.user?.name || authStore.user?.email }}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger as-child>
@@ -169,7 +172,7 @@ const userInitial = computed(() => authStore.user?.username?.charAt(0).toUpperCa
                 <AvatarFallback class="text-xs bg-sidebar-accent text-sidebar-accent-foreground">{{ userInitial }}</AvatarFallback>
               </Avatar>
               <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-sidebar-foreground truncate">{{ authStore.user?.username }}</p>
+                <p class="text-sm font-medium text-sidebar-foreground truncate">{{ authStore.user?.name || authStore.user?.email }}</p>
               </div>
               <Button variant="ghost" size="icon" class="h-8 w-8 text-muted-foreground hover:text-danger hover:bg-transparent" @click="handleLogout">
                 <LogOut class="h-4 w-4" />

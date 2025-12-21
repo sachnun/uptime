@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 
-import { Clock, Lock, Key, Download, Trash2 } from 'lucide-vue-next'
+import { Clock, Key, Download, Trash2 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const { theme, setTheme } = useDarkMode()
@@ -41,11 +41,11 @@ function handleThemeChange(value: unknown) {
           <div class="flex items-center gap-4">
             <Avatar class="h-16 w-16">
               <AvatarFallback class="text-lg">
-                {{ authStore.user?.username?.charAt(0).toUpperCase() }}
+              {{ (authStore.user?.name || authStore.user?.email || '').charAt(0).toUpperCase() }}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p class="text-lg font-medium">{{ authStore.user?.username }}</p>
+              <p class="text-lg font-medium">{{ authStore.user?.name || authStore.user?.email }}</p>
               <p class="text-sm text-muted-foreground">User ID: {{ authStore.user?.id }}</p>
             </div>
           </div>
@@ -84,10 +84,6 @@ function handleThemeChange(value: unknown) {
         </CardHeader>
         <CardContent>
           <ul class="space-y-3">
-            <li class="flex items-center gap-3 text-muted-foreground">
-              <Lock class="h-4 w-4" />
-              <span>Password change</span>
-            </li>
             <li class="flex items-center gap-3 text-muted-foreground">
               <Clock class="h-4 w-4" />
               <span>Two-factor authentication</span>
