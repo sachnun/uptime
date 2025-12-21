@@ -92,10 +92,10 @@ onMounted(fetchStatus)
       <h1 class="text-2xl font-bold mt-4">{{ error }}</h1>
     </div>
 
-    <div v-else-if="data" class="max-w-4xl mx-auto px-4 py-12">
-      <div class="text-center mb-12">
-        <h1 class="text-3xl font-bold">{{ data.title }}</h1>
-        <p v-if="data.description" class="mt-2 text-muted-foreground">
+    <div v-else-if="data" class="max-w-4xl mx-auto px-4 py-8 sm:py-12">
+      <div class="text-center mb-8 sm:mb-12">
+        <h1 class="text-2xl sm:text-3xl font-bold">{{ data.title }}</h1>
+        <p v-if="data.description" class="mt-2 text-muted-foreground text-sm sm:text-base">
           {{ data.description }}
         </p>
       </div>
@@ -112,18 +112,18 @@ onMounted(fetchStatus)
       </Card>
 
       <div class="space-y-4">
-        <Card v-for="monitor in data.monitors" :key="monitor.id" class="p-5">
-          <div class="flex items-center justify-between mb-4">
+        <Card v-for="monitor in data.monitors" :key="monitor.id" class="p-4 sm:p-5">
+          <div class="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex items-center gap-3">
               <div
                 :class="cn(
-                  'h-3 w-3 rounded-full',
+                  'h-3 w-3 rounded-full shrink-0',
                   monitor.status === true ? 'bg-success' : monitor.status === false ? 'bg-danger' : 'bg-muted-foreground'
                 )"
               />
               <span class="font-medium">{{ monitor.name }}</span>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 sm:gap-4">
               <span class="text-sm text-muted-foreground">
                 {{ monitor.uptime.toFixed(2) }}% uptime
               </span>
@@ -135,7 +135,7 @@ onMounted(fetchStatus)
             </div>
           </div>
 
-          <div class="flex items-center gap-0.5 h-8">
+          <div class="flex items-center gap-0.5 h-6 sm:h-8">
             <div
               v-for="hb in monitor.heartbeats.slice(0, 90)"
               :key="hb.id"

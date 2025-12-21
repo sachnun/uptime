@@ -155,12 +155,12 @@ onMounted(async () => {
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight">Status Pages</h1>
-        <p class="text-muted-foreground">Create public status pages for your services</p>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Status Pages</h1>
+        <p class="text-muted-foreground text-sm sm:text-base">Create public status pages for your services</p>
       </div>
-      <Button @click="openCreateModal">
+      <Button @click="openCreateModal" class="w-full sm:w-auto">
         <Plus class="h-4 w-4 mr-2" />
         New Status Page
       </Button>
@@ -182,7 +182,7 @@ onMounted(async () => {
 
     <div v-else class="space-y-3">
       <Card v-for="page in statusPages" :key="page.id" class="p-4">
-        <div class="flex items-center gap-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
               <h3 class="font-medium truncate">{{ page.title }}</h3>
@@ -195,7 +195,7 @@ onMounted(async () => {
               {{ page.monitorIds.length }} monitor{{ page.monitorIds.length !== 1 ? 's' : '' }}
             </p>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 justify-end">
             <Button
               v-if="page.published"
               variant="outline"
@@ -203,9 +203,9 @@ onMounted(async () => {
               as-child
             >
               <a :href="getPublicUrl(page.slug)" target="_blank">
-                <Eye class="h-4 w-4 mr-2" />
-                View
-                <ExternalLink class="h-3 w-3 ml-1" />
+                <Eye class="h-4 w-4 sm:mr-2" />
+                <span class="hidden sm:inline">View</span>
+                <ExternalLink class="h-3 w-3 ml-1 hidden sm:inline" />
               </a>
             </Button>
             <Button variant="outline" size="sm" @click="openEditModal(page)">

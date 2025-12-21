@@ -207,7 +207,7 @@ watch(() => route.params.id, loadMonitor)
             <Input id="port" v-model.number="form.port" type="number" min="1" max="65535" />
           </div>
 
-          <div v-if="showHttpOptions" class="grid grid-cols-2 gap-4">
+          <div v-if="showHttpOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-2">
               <Label>Method</Label>
               <Select v-model="form.method">
@@ -245,7 +245,7 @@ watch(() => route.params.id, loadMonitor)
           <CardDescription>Configure how often and how the monitor checks your service</CardDescription>
         </CardHeader>
         <CardContent>
-          <div class="grid grid-cols-3 gap-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-2">
               <Label for="interval">Interval (seconds)</Label>
               <Input id="interval" v-model.number="form.interval" type="number" min="60" />
@@ -262,7 +262,7 @@ watch(() => route.params.id, loadMonitor)
         </CardContent>
       </Card>
 
-      <div class="flex items-center justify-end gap-3">
+      <div class="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">
         <Button variant="outline" as-child>
           <RouterLink to="/">Cancel</RouterLink>
         </Button>

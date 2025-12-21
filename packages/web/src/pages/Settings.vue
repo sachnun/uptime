@@ -27,8 +27,8 @@ function handleThemeChange(value: unknown) {
 <template>
   <div>
     <div class="mb-6">
-      <h1 class="text-2xl font-bold tracking-tight">Settings</h1>
-      <p class="text-muted-foreground">Manage your account settings</p>
+      <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Settings</h1>
+      <p class="text-muted-foreground text-sm sm:text-base">Manage your account settings</p>
     </div>
 
     <div class="max-w-2xl space-y-6">
@@ -58,13 +58,13 @@ function handleThemeChange(value: unknown) {
           <CardDescription>Customize the look and feel of the application</CardDescription>
         </CardHeader>
         <CardContent>
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p class="font-medium">Theme</p>
               <p class="text-sm text-muted-foreground">Select your preferred color scheme</p>
             </div>
             <Select :model-value="theme" @update:model-value="handleThemeChange">
-              <SelectTrigger class="w-32">
+              <SelectTrigger class="w-full sm:w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

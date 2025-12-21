@@ -26,12 +26,12 @@ onMounted(() => {
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p class="text-muted-foreground">Monitor your services in real-time</p>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h1>
+        <p class="text-muted-foreground text-sm sm:text-base">Monitor your services in real-time</p>
       </div>
-      <Button as-child>
+      <Button as-child class="w-full sm:w-auto">
         <RouterLink to="/monitors/new">
           <Plus class="h-4 w-4 mr-2" />
           Add Monitor
@@ -39,44 +39,44 @@ onMounted(() => {
       </Button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
       <Card>
-        <CardContent class="pt-6">
-          <div class="flex items-center gap-4">
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-success/10">
-              <CheckCircle class="h-6 w-6 text-success" />
+        <CardContent class="p-3 sm:pt-6 sm:p-6">
+          <div class="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <div class="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-success/10">
+              <CheckCircle class="h-5 w-5 sm:h-6 sm:w-6 text-success" />
             </div>
-            <div>
-              <p class="text-sm text-muted-foreground">Up</p>
-              <p class="text-2xl font-bold">{{ upMonitors }}</p>
+            <div class="text-center sm:text-left">
+              <p class="text-xs sm:text-sm text-muted-foreground">Up</p>
+              <p class="text-xl sm:text-2xl font-bold">{{ upMonitors }}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent class="pt-6">
-          <div class="flex items-center gap-4">
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-danger/10">
-              <XCircle class="h-6 w-6 text-danger" />
+        <CardContent class="p-3 sm:pt-6 sm:p-6">
+          <div class="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <div class="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-danger/10">
+              <XCircle class="h-5 w-5 sm:h-6 sm:w-6 text-danger" />
             </div>
-            <div>
-              <p class="text-sm text-muted-foreground">Down</p>
-              <p class="text-2xl font-bold">{{ downMonitors }}</p>
+            <div class="text-center sm:text-left">
+              <p class="text-xs sm:text-sm text-muted-foreground">Down</p>
+              <p class="text-xl sm:text-2xl font-bold">{{ downMonitors }}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent class="pt-6">
-          <div class="flex items-center gap-4">
-            <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-warning/10">
-              <PauseCircle class="h-6 w-6 text-warning" />
+        <CardContent class="p-3 sm:pt-6 sm:p-6">
+          <div class="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <div class="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-lg bg-warning/10">
+              <PauseCircle class="h-5 w-5 sm:h-6 sm:w-6 text-warning" />
             </div>
-            <div>
-              <p class="text-sm text-muted-foreground">Paused</p>
-              <p class="text-2xl font-bold">{{ pausedMonitors }}</p>
+            <div class="text-center sm:text-left">
+              <p class="text-xs sm:text-sm text-muted-foreground">Paused</p>
+              <p class="text-xl sm:text-2xl font-bold">{{ pausedMonitors }}</p>
             </div>
           </div>
         </CardContent>

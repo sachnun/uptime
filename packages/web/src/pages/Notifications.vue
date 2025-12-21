@@ -173,12 +173,12 @@ onMounted(fetchNotifications)
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-2xl font-bold tracking-tight">Notifications</h1>
-        <p class="text-muted-foreground">Manage notification channels for alerts</p>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Notifications</h1>
+        <p class="text-muted-foreground text-sm sm:text-base">Manage notification channels for alerts</p>
       </div>
-      <Button @click="openCreateModal">
+      <Button @click="openCreateModal" class="w-full sm:w-auto">
         <Plus class="h-4 w-4 mr-2" />
         Add Notification
       </Button>
@@ -200,29 +200,31 @@ onMounted(fetchNotifications)
 
     <div v-else class="space-y-3">
       <Card v-for="notification in notifications" :key="notification.id" class="p-4">
-        <div class="flex items-center gap-4">
-          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-            <component :is="getTypeIcon(notification.type)" class="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2">
-              <h3 class="font-medium truncate">{{ notification.name }}</h3>
-              <Badge :variant="notification.enabled ? 'success' : 'secondary'">
-                {{ notification.enabled ? 'Enabled' : 'Disabled' }}
-              </Badge>
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+          <div class="flex items-center gap-3 sm:gap-4">
+            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+              <component :is="getTypeIcon(notification.type)" class="h-5 w-5 text-muted-foreground" />
             </div>
-            <p class="text-sm text-muted-foreground capitalize">{{ notification.type }}</p>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2">
+                <h3 class="font-medium truncate">{{ notification.name }}</h3>
+                <Badge :variant="notification.enabled ? 'success' : 'secondary'">
+                  {{ notification.enabled ? 'Enabled' : 'Disabled' }}
+                </Badge>
+              </div>
+              <p class="text-sm text-muted-foreground capitalize">{{ notification.type }}</p>
+            </div>
           </div>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 justify-end">
             <Button
               variant="outline"
               size="sm"
               :disabled="testing === notification.id"
               @click="handleTest(notification)"
             >
-              <Loader2 v-if="testing === notification.id" class="h-4 w-4 mr-2 animate-spin" />
-              <Play v-else class="h-4 w-4 mr-2" />
-              Test
+              <Loader2 v-if="testing === notification.id" class="h-4 w-4 sm:mr-2 animate-spin" />
+              <Play v-else class="h-4 w-4 sm:mr-2" />
+              <span class="hidden sm:inline">Test</span>
             </Button>
             <Button variant="outline" size="sm" @click="openEditModal(notification)">
               <Pencil class="h-4 w-4" />

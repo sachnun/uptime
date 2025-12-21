@@ -68,46 +68,46 @@ watch(() => route.params.id, loadData)
   </div>
 
   <div v-else>
-    <div class="flex items-start justify-between mb-6">
+    <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-start sm:justify-between">
       <div class="flex items-center gap-4">
-        <Button variant="ghost" size="icon" as-child>
+        <Button variant="ghost" size="icon" as-child class="shrink-0">
           <RouterLink to="/">
             <ArrowLeft class="h-4 w-4" />
           </RouterLink>
         </Button>
-        <div>
-          <div class="flex items-center gap-3">
-            <div :class="cn('h-3 w-3 rounded-full', status.color)" />
-            <h1 class="text-2xl font-bold tracking-tight">{{ monitor.name }}</h1>
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div :class="cn('h-3 w-3 rounded-full shrink-0', status.color)" />
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight truncate">{{ monitor.name }}</h1>
             <Badge :variant="status.variant">{{ status.text }}</Badge>
           </div>
-          <p class="text-muted-foreground mt-1">
+          <p class="text-muted-foreground mt-1 text-sm sm:text-base truncate">
             {{ monitor.url || monitor.hostname }}
             <span v-if="monitor.port">:{{ monitor.port }}</span>
           </p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <Button variant="outline" size="sm" @click="handlePause">
-          <Pause v-if="monitor.active" class="h-4 w-4 mr-2" />
-          <Play v-else class="h-4 w-4 mr-2" />
-          {{ monitor.active ? 'Pause' : 'Resume' }}
+          <Pause v-if="monitor.active" class="h-4 w-4 sm:mr-2" />
+          <Play v-else class="h-4 w-4 sm:mr-2" />
+          <span class="hidden sm:inline">{{ monitor.active ? 'Pause' : 'Resume' }}</span>
         </Button>
         <Button variant="outline" size="sm" as-child>
           <RouterLink :to="`/monitors/${monitor.id}/edit`">
-            <Pencil class="h-4 w-4 mr-2" />
-            Edit
+            <Pencil class="h-4 w-4 sm:mr-2" />
+            <span class="hidden sm:inline">Edit</span>
           </RouterLink>
         </Button>
         <Button variant="destructive" size="sm" @click="handleDelete">
-          <Trash2 class="h-4 w-4 mr-2" />
-          Delete
+          <Trash2 class="h-4 w-4 sm:mr-2" />
+          <span class="hidden sm:inline">Delete</span>
         </Button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
       <Card>
         <CardContent class="pt-6">
           <div class="flex items-center gap-3">
@@ -160,13 +160,13 @@ watch(() => route.params.id, loadData)
       </CardHeader>
       <CardContent>
           <div class="flex items-end gap-0.5 h-24">
-            <div
-              v-for="hb in heartbeats.slice().reverse().slice(0, 90)"
-              :key="hb.id"
-              :class="cn(
-                'flex-1 min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',
-                hb.status ? 'bg-success hover:bg-success/80' : 'bg-danger hover:bg-danger/80'
-              )"
+          <div
+            v-for="hb in heartbeats.slice().reverse().slice(0, 90)"
+            :key="hb.id"
+            :class="cn(
+              'flex-1 min-w-[2px] sm:min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',
+              hb.status ? 'bg-success hover:bg-success/80' : 'bg-danger hover:bg-danger/80'
+            )"
               :style="{ height: `${Math.min(100, Math.max(10, (hb.responseTime || 0) / 10))}%` }"
               :title="`${formatMs(hb.responseTime || 0)} - ${formatDate(hb.createdAt)}`"
             />
@@ -183,17 +183,18 @@ watch(() => route.params.id, loadData)
           <div
             v-for="hb in heartbeats.slice(0, 20)"
             :key="hb.id"
-            class="flex items-center gap-4 px-6 py-4"
+            class="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6 sm:py-4"
           >
-            <div :class="cn('h-2.5 w-2.5 rounded-full', hb.status ? 'bg-success' : 'bg-danger')" />
-            <div class="flex-1">
+            <div :class="cn('h-2.5 w-2.5 rounded-full shrink-0 hidden sm:block', hb.status ? 'bg-success' : 'bg-danger')" />
+            <div class="flex-1 flex items-center gap-2 sm:block">
+              <div :class="cn('h-2 w-2 rounded-full shrink-0 sm:hidden', hb.status ? 'bg-success' : 'bg-danger')" />
               <p class="text-sm font-medium">
                 {{ hb.status ? 'Up' : 'Down' }}
                 <span v-if="hb.statusCode" class="text-muted-foreground">({{ hb.statusCode }})</span>
               </p>
               <p class="text-sm text-muted-foreground">{{ hb.message }}</p>
             </div>
-            <div class="text-right text-sm">
+            <div class="text-right text-sm sm:text-right flex items-center gap-3 sm:block">
               <p class="font-medium">{{ formatMs(hb.responseTime || 0) }}</p>
               <p class="text-muted-foreground">{{ formatDate(hb.createdAt) }}</p>
             </div>
