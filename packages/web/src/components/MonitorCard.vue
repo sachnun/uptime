@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import type { Monitor } from '@/stores/monitors'
-import { getStatusColor, formatMs } from '@/lib/utils'
+import { formatMs } from '@/lib/utils'
 
 const props = defineProps<{
   monitor: Monitor

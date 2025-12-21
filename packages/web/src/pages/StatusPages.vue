@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { api } from '@/lib/api'
-import { useMonitorsStore, type Monitor } from '@/stores/monitors'
+import { useMonitorsStore } from '@/stores/monitors'
 
 interface StatusPage {
   id: number

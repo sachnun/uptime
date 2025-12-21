@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
-import { formatDate } from '@/lib/utils'
 
 const authStore = useAuthStore()
 </script>

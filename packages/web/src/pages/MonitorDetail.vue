@@ -2,7 +2,7 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useMonitorsStore, type Heartbeat } from '@/stores/monitors'
-import { formatMs, formatDate, getStatusColor } from '@/lib/utils'
+import { formatMs, formatDate } from '@/lib/utils'
 
 const route = useRoute()
 const router = useRouter()
@@ -10,7 +10,6 @@ const monitorsStore = useMonitorsStore()
 
 const loading = ref(true)
 const heartbeats = ref<Heartbeat[]>([])
-const stats = ref<any>(null)
 
 const monitorId = computed(() => parseInt(route.params.id as string))
 const monitor = computed(() => monitorsStore.monitors.find(m => m.id === monitorId.value))
@@ -126,7 +125,7 @@ watch(() => route.params.id, loadData)
       <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Response Time (Last 24h)</h2>
       <div class="flex items-end gap-0.5 h-24">
         <div
-          v-for="(hb, index) in heartbeats.slice().reverse().slice(0, 90)"
+          v-for="hb in heartbeats.slice().reverse().slice(0, 90)"
           :key="hb.id"
           :class="[
             'flex-1 min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',

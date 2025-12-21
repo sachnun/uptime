@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
 import { RouterLink } from 'vue-router'
-import { useMonitorsStore, type Monitor } from '@/stores/monitors'
-import { getStatusColor, getStatusText, formatMs } from '@/lib/utils'
+import { useMonitorsStore } from '@/stores/monitors'
 import MonitorCard from '@/components/MonitorCard.vue'
 
 const monitorsStore = useMonitorsStore()

@@ -59,13 +59,13 @@ export const useMonitorsStore = defineStore('monitors', () => {
   }
 
   async function createMonitor(data: Partial<Monitor>) {
-    const monitor = await api.post('/api/monitors', data)
+    const monitor = await api.post<Monitor>('/api/monitors', data)
     monitors.value.unshift(monitor)
     return monitor
   }
 
   async function updateMonitor(id: number, data: Partial<Monitor>) {
-    const monitor = await api.put(`/api/monitors/${id}`, data)
+    const monitor = await api.put<Monitor>(`/api/monitors/${id}`, data)
     const index = monitors.value.findIndex(m => m.id === id)
     if (index !== -1) {
       monitors.value[index] = { ...monitors.value[index], ...monitor }

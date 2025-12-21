@@ -14,14 +14,14 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!token.value && !!user.value)
 
   async function login(username: string, password: string) {
-    const response = await api.post('/api/auth/login', { username, password })
+    const response = await api.post<{ token: string; user: User }>('/api/auth/login', { username, password })
     token.value = response.token
     user.value = response.user
     localStorage.setItem('token', response.token)
   }
 
   async function register(username: string, password: string) {
-    const response = await api.post('/api/auth/register', { username, password })
+    const response = await api.post<{ token: string; user: User }>('/api/auth/register', { username, password })
     token.value = response.token
     user.value = response.user
     localStorage.setItem('token', response.token)
@@ -31,7 +31,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return false
 
     try {
-      const response = await api.get('/api/auth/me')
+      const response = await api.get<{ user: User }>('/api/auth/me')
       user.value = response.user
       return true
     } catch {
@@ -42,7 +42,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function checkSetup(): Promise<boolean> {
     try {
-      const response = await api.get('/api/auth/setup')
+      const response = await api.get<{ needsSetup: boolean }>('/api/auth/setup')
       return response.needsSetup
     } catch {
       return false

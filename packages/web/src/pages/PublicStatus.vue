@@ -163,7 +163,7 @@ onMounted(fetchStatus)
 
           <div class="flex items-center gap-0.5 h-8">
             <div
-              v-for="(hb, idx) in monitor.heartbeats.slice(0, 90)"
+              v-for="hb in monitor.heartbeats.slice(0, 90)"
               :key="hb.id"
               :class="[
                 'flex-1 h-full rounded-sm transition-all',
