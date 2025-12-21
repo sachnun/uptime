@@ -11,8 +11,8 @@ const statusPagesRoute = new Hono<{ Bindings: Env; Variables: AuthVariables }>()
 const createStatusPageSchema = z.object({
   slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
   title: z.string().min(1).max(100),
-  description: z.string().max(500).optional(),
-  theme: z.enum(['light', 'dark']).default('light'),
+  description: z.string().max(500).nullish(),
+  theme: z.enum(['light', 'dark', 'auto']).default('light'),
   published: z.boolean().default(false),
   monitorIds: z.array(z.number()).optional(),
 });
