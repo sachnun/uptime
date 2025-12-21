@@ -1,4 +1,4 @@
 packages:
   - packages/*
 
-onlyBuiltDependencies: '["esbuild", "workerd", "sharp", "vue-demi"]'
+onlyBuiltDependencies: '["esbuild", "workerd"]'
