@@ -2,6 +2,15 @@
 import { ref, onMounted } from 'vue'
 import { api } from '@/lib/api'
 import { useMonitorsStore } from '@/stores/monitors'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Plus, Loader2, FileText, Eye, Pencil, Trash2, ExternalLink, Check } from 'lucide-vue-next'
 
 interface StatusPage {
   id: number
@@ -146,203 +155,165 @@ onMounted(async () => {
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Status Pages</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Create public status pages for your services</p>
+        <h1 class="text-2xl font-bold tracking-tight">Status Pages</h1>
+        <p class="text-muted-foreground">Create public status pages for your services</p>
       </div>
-      <button
-        @click="openCreateModal"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
+      <Button @click="openCreateModal">
+        <Plus class="h-4 w-4 mr-2" />
         New Status Page
-      </button>
+      </Button>
     </div>
 
-    <div v-if="loading" class="text-center py-12">
-      <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-500 border-r-transparent"></div>
+    <div v-if="loading" class="flex justify-center py-12">
+      <Loader2 class="h-8 w-8 animate-spin text-primary" />
     </div>
 
-    <div v-else-if="statusPages.length === 0" class="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-      <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-      <h3 class="mt-4 text-lg font-medium text-slate-900 dark:text-white">No status pages</h3>
-      <p class="mt-2 text-slate-500 dark:text-slate-400">Create a public status page to share with your users.</p>
-    </div>
+    <Card v-else-if="statusPages.length === 0" class="flex flex-col items-center justify-center py-12">
+      <FileText class="h-12 w-12 text-muted-foreground" />
+      <h3 class="mt-4 text-lg font-medium">No status pages</h3>
+      <p class="mt-2 text-muted-foreground">Create a public status page to share with your users.</p>
+      <Button class="mt-4" @click="openCreateModal">
+        <Plus class="h-4 w-4 mr-2" />
+        New Status Page
+      </Button>
+    </Card>
 
     <div v-else class="space-y-3">
-      <div
-        v-for="page in statusPages"
-        :key="page.id"
-        class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700"
-      >
+      <Card v-for="page in statusPages" :key="page.id" class="p-4">
         <div class="flex items-center gap-4">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
-              <h3 class="font-medium text-slate-900 dark:text-white truncate">{{ page.title }}</h3>
-              <span
-                :class="[
-                  'px-2 py-0.5 text-xs rounded-full',
-                  page.published
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                    : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                ]"
-              >
+              <h3 class="font-medium truncate">{{ page.title }}</h3>
+              <Badge :variant="page.published ? 'success' : 'warning'">
                 {{ page.published ? 'Published' : 'Draft' }}
-              </span>
+              </Badge>
             </div>
-            <p class="text-sm text-slate-500 dark:text-slate-400">/status/{{ page.slug }}</p>
-            <p class="text-sm text-slate-400 dark:text-slate-500 mt-1">
+            <p class="text-sm text-muted-foreground">/status/{{ page.slug }}</p>
+            <p class="text-xs text-muted-foreground mt-1">
               {{ page.monitorIds.length }} monitor{{ page.monitorIds.length !== 1 ? 's' : '' }}
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <a
+            <Button
               v-if="page.published"
-              :href="getPublicUrl(page.slug)"
-              target="_blank"
-              class="px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+              variant="outline"
+              size="sm"
+              as-child
             >
-              View
-            </a>
-            <button
-              @click="openEditModal(page)"
-              class="px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
-            >
-              Edit
-            </button>
-            <button
-              @click="handleDelete(page)"
-              class="px-3 py-1.5 text-sm rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-            >
-              Delete
-            </button>
+              <a :href="getPublicUrl(page.slug)" target="_blank">
+                <Eye class="h-4 w-4 mr-2" />
+                View
+                <ExternalLink class="h-3 w-3 ml-1" />
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" @click="openEditModal(page)">
+              <Pencil class="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" class="text-destructive hover:text-destructive" @click="handleDelete(page)">
+              <Trash2 class="h-4 w-4" />
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
 
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50" @click="closeModal"></div>
-      <div class="relative bg-white dark:bg-slate-800 rounded-xl w-full max-w-lg p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-6">
-          {{ editing ? 'Edit Status Page' : 'New Status Page' }}
-        </h2>
+    <Dialog :open="showModal" @update:open="val => !val && closeModal()">
+      <DialogContent class="max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{{ editing ? 'Edit Status Page' : 'New Status Page' }}</DialogTitle>
+          <DialogDescription>Configure your public status page settings</DialogDescription>
+        </DialogHeader>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
-          <div v-if="error" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">
+          <div v-if="error" class="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
             {{ error }}
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Title</label>
-            <input
-              v-model="form.title"
-              type="text"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              placeholder="Service Status"
-            />
+          <div class="space-y-2">
+            <Label for="title">Title</Label>
+            <Input id="title" v-model="form.title" placeholder="Service Status" />
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Slug</label>
-            <div class="flex items-center">
-              <span class="text-slate-500 dark:text-slate-400 text-sm mr-1">/status/</span>
-              <input
-                v-model="form.slug"
-                type="text"
-                class="flex-1 px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-                placeholder="my-service"
-              />
+          <div class="space-y-2">
+            <Label for="slug">Slug</Label>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-muted-foreground">/status/</span>
+              <Input id="slug" v-model="form.slug" placeholder="my-service" class="flex-1" />
             </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
-            <textarea
-              v-model="form.description"
-              rows="2"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition resize-none"
-              placeholder="Optional description"
-            ></textarea>
+          <div class="space-y-2">
+            <Label for="description">Description</Label>
+            <Input id="description" v-model="form.description" placeholder="Optional description" />
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Theme</label>
-            <select
-              v-model="form.theme"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-            >
-              <option v-for="t in themes" :key="t.value" :value="t.value">{{ t.label }}</option>
-            </select>
+          <div class="space-y-2">
+            <Label>Theme</Label>
+            <Select v-model="form.theme">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="t in themes" :key="t.value" :value="t.value">
+                  {{ t.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Monitors</label>
-            <div class="border border-slate-300 dark:border-slate-600 rounded-lg max-h-48 overflow-y-auto">
+          <div class="space-y-2">
+            <Label>Monitors</Label>
+            <div class="border rounded-lg max-h-48 overflow-y-auto">
               <div
                 v-for="monitor in monitorsStore.monitors"
                 :key="monitor.id"
                 @click="toggleMonitor(monitor.id)"
-                :class="[
+                :class="cn(
                   'flex items-center gap-3 px-3 py-2 cursor-pointer transition',
                   form.monitorIds.includes(monitor.id)
-                    ? 'bg-green-50 dark:bg-green-900/20'
-                    : 'hover:bg-slate-50 dark:hover:bg-slate-700'
-                ]"
+                    ? 'bg-primary/10'
+                    : 'hover:bg-muted'
+                )"
               >
                 <div
-                  :class="[
+                  :class="cn(
                     'h-4 w-4 rounded border flex items-center justify-center',
                     form.monitorIds.includes(monitor.id)
-                      ? 'bg-green-500 border-green-500'
-                      : 'border-slate-300 dark:border-slate-600'
-                  ]"
+                      ? 'bg-primary border-primary'
+                      : 'border-input'
+                  )"
                 >
-                  <svg v-if="form.monitorIds.includes(monitor.id)" class="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                  </svg>
+                  <Check v-if="form.monitorIds.includes(monitor.id)" class="h-3 w-3 text-primary-foreground" />
                 </div>
-                <span class="text-sm text-slate-700 dark:text-slate-300">{{ monitor.name }}</span>
+                <span class="text-sm">{{ monitor.name }}</span>
               </div>
-              <div v-if="monitorsStore.monitors.length === 0" class="px-3 py-4 text-center text-sm text-slate-500">
+              <div v-if="monitorsStore.monitors.length === 0" class="px-3 py-4 text-center text-sm text-muted-foreground">
                 No monitors available
               </div>
             </div>
           </div>
 
-          <div class="flex items-center gap-2">
+          <div class="flex items-center space-x-2">
             <input
               id="published"
               v-model="form.published"
               type="checkbox"
-              class="h-4 w-4 rounded border-slate-300 text-green-500 focus:ring-green-500"
+              class="h-4 w-4 rounded border-input"
             />
-            <label for="published" class="text-sm text-slate-700 dark:text-slate-300">Published</label>
+            <Label for="published">Published</Label>
           </div>
 
-          <div class="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              @click="closeModal"
-              class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="saving"
-              class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition disabled:opacity-50"
-            >
+          <DialogFooter>
+            <Button type="button" variant="outline" @click="closeModal">Cancel</Button>
+            <Button type="submit" :disabled="saving">
+              <Loader2 v-if="saving" class="mr-2 h-4 w-4 animate-spin" />
               {{ saving ? 'Saving...' : (editing ? 'Update' : 'Create') }}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

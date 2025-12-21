@@ -2,6 +2,13 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useMonitorsStore, type Monitor } from '@/stores/monitors'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+import { ArrowLeft, Loader2 } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -36,7 +43,6 @@ const monitorTypes = [
 ]
 
 const httpMethods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS']
-
 const dnsRecordTypes = ['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS', 'SOA', 'SRV']
 
 const showUrl = computed(() => form.value.type === 'http' || form.value.type === 'https')
@@ -136,164 +142,134 @@ watch(() => route.params.id, loadMonitor)
 
 <template>
   <div>
-    <div class="flex items-center gap-4 mb-8">
-      <RouterLink to="/" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-        <svg class="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </RouterLink>
+    <div class="flex items-center gap-4 mb-6">
+      <Button variant="ghost" size="icon" as-child>
+        <RouterLink to="/">
+          <ArrowLeft class="h-4 w-4" />
+        </RouterLink>
+      </Button>
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+        <h1 class="text-2xl font-bold tracking-tight">
           {{ isEdit ? 'Edit Monitor' : 'Create Monitor' }}
         </h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">
+        <p class="text-muted-foreground">
           {{ isEdit ? 'Update monitor configuration' : 'Set up a new monitor to track your service' }}
         </p>
       </div>
     </div>
 
-    <div v-if="loading" class="text-center py-12">
-      <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-500 border-r-transparent"></div>
+    <div v-if="loading" class="flex justify-center py-12">
+      <Loader2 class="h-8 w-8 animate-spin text-primary" />
     </div>
 
-    <form v-else @submit.prevent="handleSubmit" class="max-w-2xl">
-      <div v-if="error" class="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400">
+    <form v-else @submit.prevent="handleSubmit" class="max-w-2xl space-y-6">
+      <div v-if="error" class="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
         {{ error }}
       </div>
 
-      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-6">
-        <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Name</label>
-          <input
-            v-model="form.name"
-            type="text"
-            class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder-slate-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-            placeholder="My Website"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Monitor Type</label>
-          <select
-            v-model="form.type"
-            class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-          >
-            <option v-for="t in monitorTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
-          </select>
-        </div>
-
-        <div v-if="showUrl">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">URL</label>
-          <input
-            v-model="form.url"
-            type="url"
-            class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder-slate-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-            placeholder="https://example.com"
-          />
-        </div>
-
-        <div v-if="showHostname">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Hostname</label>
-          <input
-            v-model="form.hostname"
-            type="text"
-            class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder-slate-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-            placeholder="example.com"
-          />
-        </div>
-
-        <div v-if="showPort">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Port</label>
-          <input
-            v-model.number="form.port"
-            type="number"
-            min="1"
-            max="65535"
-            class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white placeholder-slate-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-          />
-        </div>
-
-        <div v-if="showHttpOptions" class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Method</label>
-            <select
-              v-model="form.method"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-            >
-              <option v-for="m in httpMethods" :key="m" :value="m">{{ m }}</option>
-            </select>
+      <Card>
+        <CardHeader>
+          <CardTitle>Basic Information</CardTitle>
+          <CardDescription>Configure the basic settings for your monitor</CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-4">
+          <div class="space-y-2">
+            <Label for="name">Name</Label>
+            <Input id="name" v-model="form.name" placeholder="My Website" />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Expected Status</label>
-            <input
-              v-model.number="form.expectedStatus"
-              type="number"
-              min="100"
-              max="599"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-            />
+
+          <div class="space-y-2">
+            <Label>Monitor Type</Label>
+            <Select v-model="form.type">
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="t in monitorTypes" :key="t.value" :value="t.value">
+                  {{ t.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
 
-        <div v-if="showDnsOptions">
-          <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">DNS Record Type</label>
-          <select
-            v-model="form.dnsRecordType"
-            class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-          >
-            <option v-for="r in dnsRecordTypes" :key="r" :value="r">{{ r }}</option>
-          </select>
-        </div>
+          <div v-if="showUrl" class="space-y-2">
+            <Label for="url">URL</Label>
+            <Input id="url" v-model="form.url" type="url" placeholder="https://example.com" />
+          </div>
 
-        <div class="border-t border-slate-200 dark:border-slate-700 pt-6">
-          <h3 class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-4">Check Settings</h3>
+          <div v-if="showHostname" class="space-y-2">
+            <Label for="hostname">Hostname</Label>
+            <Input id="hostname" v-model="form.hostname" placeholder="example.com" />
+          </div>
+
+          <div v-if="showPort" class="space-y-2">
+            <Label for="port">Port</Label>
+            <Input id="port" v-model.number="form.port" type="number" min="1" max="65535" />
+          </div>
+
+          <div v-if="showHttpOptions" class="grid grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <Label>Method</Label>
+              <Select v-model="form.method">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="m in httpMethods" :key="m" :value="m">{{ m }}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="space-y-2">
+              <Label for="expectedStatus">Expected Status</Label>
+              <Input id="expectedStatus" v-model.number="form.expectedStatus" type="number" min="100" max="599" />
+            </div>
+          </div>
+
+          <div v-if="showDnsOptions" class="space-y-2">
+            <Label>DNS Record Type</Label>
+            <Select v-model="form.dnsRecordType">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="r in dnsRecordTypes" :key="r" :value="r">{{ r }}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Check Settings</CardTitle>
+          <CardDescription>Configure how often and how the monitor checks your service</CardDescription>
+        </CardHeader>
+        <CardContent>
           <div class="grid grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-400 mb-2">Interval (seconds)</label>
-              <input
-                v-model.number="form.interval"
-                type="number"
-                min="60"
-                class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              />
+            <div class="space-y-2">
+              <Label for="interval">Interval (seconds)</Label>
+              <Input id="interval" v-model.number="form.interval" type="number" min="60" />
             </div>
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-400 mb-2">Timeout (seconds)</label>
-              <input
-                v-model.number="form.timeout"
-                type="number"
-                min="1"
-                class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              />
+            <div class="space-y-2">
+              <Label for="timeout">Timeout (seconds)</Label>
+              <Input id="timeout" v-model.number="form.timeout" type="number" min="1" />
             </div>
-            <div>
-              <label class="block text-sm text-slate-600 dark:text-slate-400 mb-2">Retries</label>
-              <input
-                v-model.number="form.retries"
-                type="number"
-                min="0"
-                max="10"
-                class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              />
+            <div class="space-y-2">
+              <Label for="retries">Retries</Label>
+              <Input id="retries" v-model.number="form.retries" type="number" min="0" max="10" />
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div class="flex items-center justify-end gap-3 mt-6">
-        <RouterLink
-          to="/"
-          class="px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
-        >
-          Cancel
-        </RouterLink>
-        <button
-          type="submit"
-          :disabled="saving"
-          class="px-6 py-2.5 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+      <div class="flex items-center justify-end gap-3">
+        <Button variant="outline" as-child>
+          <RouterLink to="/">Cancel</RouterLink>
+        </Button>
+        <Button type="submit" :disabled="saving">
+          <Loader2 v-if="saving" class="mr-2 h-4 w-4 animate-spin" />
           {{ saving ? 'Saving...' : (isEdit ? 'Update Monitor' : 'Create Monitor') }}
-        </button>
+        </Button>
       </div>
     </form>
   </div>

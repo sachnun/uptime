@@ -2,6 +2,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Monitor, Loader2 } from 'lucide-vue-next'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -32,56 +37,56 @@ async function handleLogin() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-900 px-4">
-    <div class="w-full max-w-md">
-      <div class="text-center mb-8">
-        <div class="inline-flex h-16 w-16 rounded-2xl bg-green-500 items-center justify-center mb-4">
-          <svg class="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
+  <div class="min-h-screen flex items-center justify-center bg-background px-4">
+    <div class="w-full max-w-sm">
+      <div class="flex flex-col items-center mb-8">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary mb-4">
+          <Monitor class="h-6 w-6 text-primary-foreground" />
         </div>
-        <h1 class="text-3xl font-bold text-white">Uptime</h1>
-        <p class="text-slate-400 mt-2">Sign in to your account</p>
+        <h1 class="text-2xl font-bold">Uptime</h1>
+        <p class="text-muted-foreground mt-1">Sign in to your account</p>
       </div>
 
-      <form @submit.prevent="handleLogin" class="bg-slate-800 rounded-xl p-8 shadow-xl">
-        <div v-if="error" class="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-          {{ error }}
-        </div>
+      <Card>
+        <CardHeader class="space-y-1">
+          <CardTitle class="text-xl">Sign in</CardTitle>
+          <CardDescription>Enter your credentials to access your account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form @submit.prevent="handleLogin" class="space-y-4">
+            <div v-if="error" class="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+              {{ error }}
+            </div>
 
-        <div class="space-y-4">
-          <div>
-            <label for="username" class="block text-sm font-medium text-slate-300 mb-1">Username</label>
-            <input
-              id="username"
-              v-model="username"
-              type="text"
-              class="w-full px-4 py-2.5 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              placeholder="Enter your username"
-            />
-          </div>
+            <div class="space-y-2">
+              <Label for="username">Username</Label>
+              <Input
+                id="username"
+                v-model="username"
+                type="text"
+                placeholder="Enter your username"
+                :disabled="loading"
+              />
+            </div>
 
-          <div>
-            <label for="password" class="block text-sm font-medium text-slate-300 mb-1">Password</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              class="w-full px-4 py-2.5 rounded-lg bg-slate-700 border border-slate-600 text-white placeholder-slate-400 focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              placeholder="Enter your password"
-            />
-          </div>
-        </div>
+            <div class="space-y-2">
+              <Label for="password">Password</Label>
+              <Input
+                id="password"
+                v-model="password"
+                type="password"
+                placeholder="Enter your password"
+                :disabled="loading"
+              />
+            </div>
 
-        <button
-          type="submit"
-          :disabled="loading"
-          class="w-full mt-6 py-2.5 px-4 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <span v-if="loading">Signing in...</span>
-          <span v-else>Sign in</span>
-        </button>
-      </form>
+            <Button type="submit" class="w-full" :disabled="loading">
+              <Loader2 v-if="loading" class="mr-2 h-4 w-4 animate-spin" />
+              {{ loading ? 'Signing in...' : 'Sign in' }}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   </div>
 </template>

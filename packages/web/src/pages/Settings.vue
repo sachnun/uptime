@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { useAuthStore } from '@/stores/auth'
 import { useDarkMode, type Theme } from '@/lib/darkMode'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
+
+import { Clock, Lock, Key, Download, Trash2 } from 'lucide-vue-next'
 
 const authStore = useAuthStore()
 const { theme, setTheme } = useDarkMode()
@@ -11,99 +17,105 @@ const themes: { value: Theme; label: string }[] = [
   { value: 'system', label: 'System' },
 ]
 
-function handleThemeChange(event: Event) {
-  const target = event.target as HTMLSelectElement
-  setTheme(target.value as Theme)
+function handleThemeChange(value: unknown) {
+  if (typeof value === 'string') {
+    setTheme(value as Theme)
+  }
 }
 </script>
 
 <template>
   <div>
-    <div class="mb-8">
-      <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Settings</h1>
-      <p class="text-slate-500 dark:text-slate-400 mt-1">Manage your account settings</p>
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold tracking-tight">Settings</h1>
+      <p class="text-muted-foreground">Manage your account settings</p>
     </div>
 
     <div class="max-w-2xl space-y-6">
-      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Account Information</h2>
-        <div class="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Account Information</CardTitle>
+          <CardDescription>Your personal account details</CardDescription>
+        </CardHeader>
+        <CardContent>
           <div class="flex items-center gap-4">
-            <div class="h-16 w-16 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-              <span class="text-2xl font-bold text-slate-600 dark:text-slate-300">
+            <Avatar class="h-16 w-16">
+              <AvatarFallback class="text-lg">
                 {{ authStore.user?.username?.charAt(0).toUpperCase() }}
-              </span>
-            </div>
+              </AvatarFallback>
+            </Avatar>
             <div>
-              <p class="text-lg font-medium text-slate-900 dark:text-white">{{ authStore.user?.username }}</p>
-              <p class="text-sm text-slate-500 dark:text-slate-400">User ID: {{ authStore.user?.id }}</p>
+              <p class="text-lg font-medium">{{ authStore.user?.username }}</p>
+              <p class="text-sm text-muted-foreground">User ID: {{ authStore.user?.id }}</p>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Application</h2>
-        <div class="space-y-3">
-          <div class="flex items-center justify-between py-2">
-            <span class="text-slate-600 dark:text-slate-400">Version</span>
-            <span class="text-slate-900 dark:text-white font-medium">1.0.0</span>
+      <Card>
+        <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+          <CardDescription>Customize the look and feel of the application</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium">Theme</p>
+              <p class="text-sm text-muted-foreground">Select your preferred color scheme</p>
+            </div>
+            <Select :model-value="theme" @update:model-value="handleThemeChange">
+              <SelectTrigger class="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="t in themes" :key="t.value" :value="t.value">
+                  {{ t.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div class="flex items-center justify-between py-2 border-t border-slate-200 dark:border-slate-700">
-            <span class="text-slate-600 dark:text-slate-400">Theme</span>
-            <select
-              :value="theme"
-              @change="handleThemeChange"
-              class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-            >
-              <option v-for="t in themes" :key="t.value" :value="t.value">{{ t.label }}</option>
-            </select>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6">
-        <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Coming Soon</h2>
-        <ul class="space-y-2 text-slate-600 dark:text-slate-400">
-          <li class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Password change
-          </li>
-          <li class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Two-factor authentication
-          </li>
-          <li class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            API keys management
-          </li>
-          <li class="flex items-center gap-2">
-            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Data export
-          </li>
-        </ul>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Coming Soon</CardTitle>
+          <CardDescription>Features in development</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul class="space-y-3">
+            <li class="flex items-center gap-3 text-muted-foreground">
+              <Lock class="h-4 w-4" />
+              <span>Password change</span>
+            </li>
+            <li class="flex items-center gap-3 text-muted-foreground">
+              <Clock class="h-4 w-4" />
+              <span>Two-factor authentication</span>
+            </li>
+            <li class="flex items-center gap-3 text-muted-foreground">
+              <Key class="h-4 w-4" />
+              <span>API keys management</span>
+            </li>
+            <li class="flex items-center gap-3 text-muted-foreground">
+              <Download class="h-4 w-4" />
+              <span>Data export</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
 
-      <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 p-6">
-        <h2 class="text-lg font-semibold text-red-700 dark:text-red-400 mb-2">Danger Zone</h2>
-        <p class="text-sm text-red-600 dark:text-red-400 mb-4">
-          These actions are irreversible. Please proceed with caution.
-        </p>
-        <button
-          disabled
-          class="px-4 py-2 rounded-lg bg-red-500 text-white font-medium opacity-50 cursor-not-allowed"
-        >
-          Delete Account
-        </button>
-      </div>
+      <Card class="border-destructive/50">
+        <CardHeader>
+          <CardTitle class="text-destructive">Danger Zone</CardTitle>
+          <CardDescription>These actions are irreversible. Please proceed with caution.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="destructive" disabled>
+            <Trash2 class="h-4 w-4 mr-2" />
+            Delete Account
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   </div>
 </template>

@@ -2,7 +2,12 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
 import { useMonitorsStore, type Heartbeat } from '@/stores/monitors'
-import { formatMs, formatDate } from '@/lib/utils'
+import { formatMs, formatDate, cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+
+import { ArrowLeft, Loader2, Pause, Play, Pencil, Trash2, Clock, Activity, TrendingUp, Timer } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,10 +20,10 @@ const monitorId = computed(() => parseInt(route.params.id as string))
 const monitor = computed(() => monitorsStore.monitors.find(m => m.id === monitorId.value))
 
 const status = computed(() => {
-  if (!monitor.value?.active) return { text: 'Paused', color: 'bg-yellow-500', textColor: 'text-yellow-600' }
-  if (monitor.value?.latestHeartbeat?.status === true) return { text: 'Up', color: 'bg-green-500', textColor: 'text-green-600' }
-  if (monitor.value?.latestHeartbeat?.status === false) return { text: 'Down', color: 'bg-red-500', textColor: 'text-red-600' }
-  return { text: 'Pending', color: 'bg-gray-400', textColor: 'text-gray-600' }
+  if (!monitor.value?.active) return { text: 'Paused', variant: 'warning' as const, color: 'bg-yellow-500' }
+  if (monitor.value?.latestHeartbeat?.status === true) return { text: 'Up', variant: 'success' as const, color: 'bg-green-500' }
+  if (monitor.value?.latestHeartbeat?.status === false) return { text: 'Down', variant: 'destructive' as const, color: 'bg-red-500' }
+  return { text: 'Pending', variant: 'secondary' as const, color: 'bg-gray-400' }
 })
 
 async function loadData() {
@@ -51,29 +56,32 @@ watch(() => route.params.id, loadData)
 </script>
 
 <template>
-  <div v-if="loading" class="text-center py-12">
-    <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-500 border-r-transparent"></div>
+  <div v-if="loading" class="flex justify-center py-12">
+    <Loader2 class="h-8 w-8 animate-spin text-primary" />
   </div>
 
-  <div v-else-if="!monitor" class="text-center py-12">
-    <p class="text-slate-500 dark:text-slate-400">Monitor not found</p>
-    <RouterLink to="/" class="text-green-500 hover:underline mt-2 inline-block">Back to Dashboard</RouterLink>
+  <div v-else-if="!monitor" class="flex flex-col items-center justify-center py-12">
+    <p class="text-muted-foreground">Monitor not found</p>
+    <Button class="mt-4" variant="outline" as-child>
+      <RouterLink to="/">Back to Dashboard</RouterLink>
+    </Button>
   </div>
 
   <div v-else>
-    <div class="flex items-start justify-between mb-8">
+    <div class="flex items-start justify-between mb-6">
       <div class="flex items-center gap-4">
-        <RouterLink to="/" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-          <svg class="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </RouterLink>
+        <Button variant="ghost" size="icon" as-child>
+          <RouterLink to="/">
+            <ArrowLeft class="h-4 w-4" />
+          </RouterLink>
+        </Button>
         <div>
           <div class="flex items-center gap-3">
-            <div :class="['h-3 w-3 rounded-full', status.color]"></div>
-            <h1 class="text-2xl font-bold text-slate-900 dark:text-white">{{ monitor.name }}</h1>
+            <div :class="cn('h-3 w-3 rounded-full', status.color)" />
+            <h1 class="text-2xl font-bold tracking-tight">{{ monitor.name }}</h1>
+            <Badge :variant="status.variant">{{ status.text }}</Badge>
           </div>
-          <p class="text-slate-500 dark:text-slate-400 mt-1">
+          <p class="text-muted-foreground mt-1">
             {{ monitor.url || monitor.hostname }}
             <span v-if="monitor.port">:{{ monitor.port }}</span>
           </p>
@@ -81,84 +89,117 @@ watch(() => route.params.id, loadData)
       </div>
 
       <div class="flex items-center gap-2">
-        <button
-          @click="handlePause"
-          class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition"
-        >
+        <Button variant="outline" size="sm" @click="handlePause">
+          <Pause v-if="monitor.active" class="h-4 w-4 mr-2" />
+          <Play v-else class="h-4 w-4 mr-2" />
           {{ monitor.active ? 'Pause' : 'Resume' }}
-        </button>
-        <RouterLink
-          :to="`/monitors/${monitor.id}/edit`"
-          class="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition"
-        >
-          Edit
-        </RouterLink>
-        <button
-          @click="handleDelete"
-          class="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition"
-        >
+        </Button>
+        <Button variant="outline" size="sm" as-child>
+          <RouterLink :to="`/monitors/${monitor.id}/edit`">
+            <Pencil class="h-4 w-4 mr-2" />
+            Edit
+          </RouterLink>
+        </Button>
+        <Button variant="destructive" size="sm" @click="handleDelete">
+          <Trash2 class="h-4 w-4 mr-2" />
           Delete
-        </button>
+        </Button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Status</p>
-        <p :class="['text-xl font-bold', status.textColor]">{{ status.text }}</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Uptime (24h)</p>
-        <p class="text-xl font-bold text-slate-900 dark:text-white">{{ monitor.uptime.toFixed(2) }}%</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Avg Response</p>
-        <p class="text-xl font-bold text-slate-900 dark:text-white">{{ formatMs(monitor.avgResponseTime) }}</p>
-      </div>
-      <div class="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700">
-        <p class="text-sm text-slate-500 dark:text-slate-400">Check Interval</p>
-        <p class="text-xl font-bold text-slate-900 dark:text-white">{{ monitor.interval }}s</p>
-      </div>
-    </div>
-
-    <div class="bg-white dark:bg-slate-800 rounded-xl p-6 border border-slate-200 dark:border-slate-700 mb-8">
-      <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Response Time (Last 24h)</h2>
-      <div class="flex items-end gap-0.5 h-24">
-        <div
-          v-for="hb in heartbeats.slice().reverse().slice(0, 90)"
-          :key="hb.id"
-          :class="[
-            'flex-1 min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',
-            hb.status ? 'bg-green-500 hover:bg-green-400' : 'bg-red-500 hover:bg-red-400'
-          ]"
-          :style="{ height: `${Math.min(100, Math.max(10, (hb.responseTime || 0) / 10))}%` }"
-          :title="`${formatMs(hb.responseTime || 0)} - ${formatDate(hb.createdAt)}`"
-        ></div>
-      </div>
-    </div>
-
-    <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-      <h2 class="text-lg font-semibold text-slate-900 dark:text-white p-6 border-b border-slate-200 dark:border-slate-700">Recent Events</h2>
-      <div class="divide-y divide-slate-200 dark:divide-slate-700">
-        <div
-          v-for="hb in heartbeats.slice(0, 20)"
-          :key="hb.id"
-          class="flex items-center gap-4 px-6 py-4"
-        >
-          <div :class="['h-2.5 w-2.5 rounded-full', hb.status ? 'bg-green-500' : 'bg-red-500']"></div>
-          <div class="flex-1">
-            <p class="text-sm font-medium text-slate-900 dark:text-white">
-              {{ hb.status ? 'Up' : 'Down' }}
-              <span v-if="hb.statusCode" class="text-slate-500 dark:text-slate-400">({{ hb.statusCode }})</span>
-            </p>
-            <p class="text-sm text-slate-500 dark:text-slate-400">{{ hb.message }}</p>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <Card>
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-3">
+            <Activity class="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p class="text-sm text-muted-foreground">Status</p>
+              <p class="text-lg font-semibold">{{ status.text }}</p>
+            </div>
           </div>
-          <div class="text-right text-sm">
-            <p class="text-slate-900 dark:text-white">{{ formatMs(hb.responseTime || 0) }}</p>
-            <p class="text-slate-500 dark:text-slate-400">{{ formatDate(hb.createdAt) }}</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-3">
+            <TrendingUp class="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p class="text-sm text-muted-foreground">Uptime (24h)</p>
+              <p class="text-lg font-semibold">{{ monitor.uptime.toFixed(2) }}%</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-3">
+            <Timer class="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p class="text-sm text-muted-foreground">Avg Response</p>
+              <p class="text-lg font-semibold">{{ formatMs(monitor.avgResponseTime) }}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent class="pt-6">
+          <div class="flex items-center gap-3">
+            <Clock class="h-5 w-5 text-muted-foreground" />
+            <div>
+              <p class="text-sm text-muted-foreground">Check Interval</p>
+              <p class="text-lg font-semibold">{{ monitor.interval }}s</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <Card class="mb-6">
+      <CardHeader>
+        <CardTitle>Response Time (Last 24h)</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div class="flex items-end gap-0.5 h-24">
+          <div
+            v-for="hb in heartbeats.slice().reverse().slice(0, 90)"
+            :key="hb.id"
+            :class="cn(
+              'flex-1 min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',
+              hb.status ? 'bg-green-500 hover:bg-green-400' : 'bg-red-500 hover:bg-red-400'
+            )"
+            :style="{ height: `${Math.min(100, Math.max(10, (hb.responseTime || 0) / 10))}%` }"
+            :title="`${formatMs(hb.responseTime || 0)} - ${formatDate(hb.createdAt)}`"
+          />
+        </div>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader>
+        <CardTitle>Recent Events</CardTitle>
+      </CardHeader>
+      <CardContent class="p-0">
+        <div class="divide-y">
+          <div
+            v-for="hb in heartbeats.slice(0, 20)"
+            :key="hb.id"
+            class="flex items-center gap-4 px-6 py-4"
+          >
+            <div :class="cn('h-2.5 w-2.5 rounded-full', hb.status ? 'bg-green-500' : 'bg-red-500')" />
+            <div class="flex-1">
+              <p class="text-sm font-medium">
+                {{ hb.status ? 'Up' : 'Down' }}
+                <span v-if="hb.statusCode" class="text-muted-foreground">({{ hb.statusCode }})</span>
+              </p>
+              <p class="text-sm text-muted-foreground">{{ hb.message }}</p>
+            </div>
+            <div class="text-right text-sm">
+              <p class="font-medium">{{ formatMs(hb.responseTime || 0) }}</p>
+              <p class="text-muted-foreground">{{ formatDate(hb.createdAt) }}</p>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   </div>
 </template>

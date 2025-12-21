@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { api } from '@/lib/api'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+
+import { Plus, Loader2, Bell, Webhook, MessageSquare, Send, Hash, Pencil, Trash2, Play } from 'lucide-vue-next'
 
 interface Notification {
   id: number
@@ -31,10 +40,10 @@ const form = ref({
 })
 
 const notificationTypes = [
-  { value: 'webhook', label: 'Webhook' },
-  { value: 'discord', label: 'Discord' },
-  { value: 'telegram', label: 'Telegram' },
-  { value: 'slack', label: 'Slack' },
+  { value: 'webhook', label: 'Webhook', icon: Webhook },
+  { value: 'discord', label: 'Discord', icon: MessageSquare },
+  { value: 'telegram', label: 'Telegram', icon: Send },
+  { value: 'slack', label: 'Slack', icon: Hash },
 ]
 
 async function fetchNotifications() {
@@ -149,14 +158,14 @@ async function handleTest(notification: Notification) {
   }
 }
 
-function getTypeIcon(type: string): string {
-  const icons: Record<string, string> = {
-    webhook: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1',
-    discord: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z',
-    telegram: 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8',
-    slack: 'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z',
+function getTypeIcon(type: string) {
+  const iconMap: Record<string, typeof Webhook> = {
+    webhook: Webhook,
+    discord: MessageSquare,
+    telegram: Send,
+    slack: Hash,
   }
-  return icons[type] || icons.webhook
+  return iconMap[type] || Webhook
 }
 
 onMounted(fetchNotifications)
@@ -164,196 +173,144 @@ onMounted(fetchNotifications)
 
 <template>
   <div>
-    <div class="flex items-center justify-between mb-8">
+    <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Notifications</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-1">Manage notification channels for alerts</p>
+        <h1 class="text-2xl font-bold tracking-tight">Notifications</h1>
+        <p class="text-muted-foreground">Manage notification channels for alerts</p>
       </div>
-      <button
-        @click="openCreateModal"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition"
-      >
-        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
+      <Button @click="openCreateModal">
+        <Plus class="h-4 w-4 mr-2" />
         Add Notification
-      </button>
+      </Button>
     </div>
 
-    <div v-if="loading" class="text-center py-12">
-      <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-green-500 border-r-transparent"></div>
+    <div v-if="loading" class="flex justify-center py-12">
+      <Loader2 class="h-8 w-8 animate-spin text-primary" />
     </div>
 
-    <div v-else-if="notifications.length === 0" class="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-      <svg class="mx-auto h-12 w-12 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-      </svg>
-      <h3 class="mt-4 text-lg font-medium text-slate-900 dark:text-white">No notifications configured</h3>
-      <p class="mt-2 text-slate-500 dark:text-slate-400">Add a notification channel to receive alerts.</p>
-    </div>
+    <Card v-else-if="notifications.length === 0" class="flex flex-col items-center justify-center py-12">
+      <Bell class="h-12 w-12 text-muted-foreground" />
+      <h3 class="mt-4 text-lg font-medium">No notifications configured</h3>
+      <p class="mt-2 text-muted-foreground">Add a notification channel to receive alerts.</p>
+      <Button class="mt-4" @click="openCreateModal">
+        <Plus class="h-4 w-4 mr-2" />
+        Add Notification
+      </Button>
+    </Card>
 
     <div v-else class="space-y-3">
-      <div
-        v-for="notification in notifications"
-        :key="notification.id"
-        class="bg-white dark:bg-slate-800 rounded-xl p-4 border border-slate-200 dark:border-slate-700 flex items-center gap-4"
-      >
-        <div class="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center">
-          <svg class="h-5 w-5 text-slate-600 dark:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="getTypeIcon(notification.type)" />
-          </svg>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center gap-2">
-            <h3 class="font-medium text-slate-900 dark:text-white truncate">{{ notification.name }}</h3>
-            <span
-              :class="[
-                'px-2 py-0.5 text-xs rounded-full',
-                notification.enabled
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                  : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400'
-              ]"
-            >
-              {{ notification.enabled ? 'Enabled' : 'Disabled' }}
-            </span>
+      <Card v-for="notification in notifications" :key="notification.id" class="p-4">
+        <div class="flex items-center gap-4">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+            <component :is="getTypeIcon(notification.type)" class="h-5 w-5 text-muted-foreground" />
           </div>
-          <p class="text-sm text-slate-500 dark:text-slate-400 capitalize">{{ notification.type }}</p>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <h3 class="font-medium truncate">{{ notification.name }}</h3>
+              <Badge :variant="notification.enabled ? 'success' : 'secondary'">
+                {{ notification.enabled ? 'Enabled' : 'Disabled' }}
+              </Badge>
+            </div>
+            <p class="text-sm text-muted-foreground capitalize">{{ notification.type }}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="testing === notification.id"
+              @click="handleTest(notification)"
+            >
+              <Loader2 v-if="testing === notification.id" class="h-4 w-4 mr-2 animate-spin" />
+              <Play v-else class="h-4 w-4 mr-2" />
+              Test
+            </Button>
+            <Button variant="outline" size="sm" @click="openEditModal(notification)">
+              <Pencil class="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm" class="text-destructive hover:text-destructive" @click="handleDelete(notification)">
+              <Trash2 class="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <button
-            @click="handleTest(notification)"
-            :disabled="testing === notification.id"
-            class="px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition disabled:opacity-50"
-          >
-            {{ testing === notification.id ? 'Testing...' : 'Test' }}
-          </button>
-          <button
-            @click="openEditModal(notification)"
-            class="px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
-          >
-            Edit
-          </button>
-          <button
-            @click="handleDelete(notification)"
-            class="px-3 py-1.5 text-sm rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
+      </Card>
     </div>
 
-    <div v-if="showModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div class="absolute inset-0 bg-black/50" @click="closeModal"></div>
-      <div class="relative bg-white dark:bg-slate-800 rounded-xl w-full max-w-lg p-6 shadow-xl">
-        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-6">
-          {{ editing ? 'Edit Notification' : 'New Notification' }}
-        </h2>
+    <Dialog :open="showModal" @update:open="val => !val && closeModal()">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ editing ? 'Edit Notification' : 'New Notification' }}</DialogTitle>
+          <DialogDescription>Configure your notification channel settings</DialogDescription>
+        </DialogHeader>
 
         <form @submit.prevent="handleSubmit" class="space-y-4">
-          <div v-if="error" class="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-sm">
+          <div v-if="error" class="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
             {{ error }}
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Name</label>
-            <input
-              v-model="form.name"
-              type="text"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              placeholder="My Notification"
-            />
+          <div class="space-y-2">
+            <Label for="name">Name</Label>
+            <Input id="name" v-model="form.name" placeholder="My Notification" />
           </div>
 
-          <div>
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Type</label>
-            <select
-              v-model="form.type"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-            >
-              <option v-for="t in notificationTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
-            </select>
+          <div class="space-y-2">
+            <Label>Type</Label>
+            <Select v-model="form.type">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="t in notificationTypes" :key="t.value" :value="t.value">
+                  {{ t.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <div v-if="form.type === 'webhook'">
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Webhook URL</label>
-            <input
-              v-model="form.webhookUrl"
-              type="url"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              placeholder="https://example.com/webhook"
-            />
+          <div v-if="form.type === 'webhook'" class="space-y-2">
+            <Label for="webhookUrl">Webhook URL</Label>
+            <Input id="webhookUrl" v-model="form.webhookUrl" type="url" placeholder="https://example.com/webhook" />
           </div>
 
-          <div v-if="form.type === 'discord'">
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Discord Webhook URL</label>
-            <input
-              v-model="form.discordWebhook"
-              type="url"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              placeholder="https://discord.com/api/webhooks/..."
-            />
+          <div v-if="form.type === 'discord'" class="space-y-2">
+            <Label for="discordWebhook">Discord Webhook URL</Label>
+            <Input id="discordWebhook" v-model="form.discordWebhook" type="url" placeholder="https://discord.com/api/webhooks/..." />
           </div>
 
-          <div v-if="form.type === 'telegram'" class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Bot Token</label>
-              <input
-                v-model="form.telegramBotToken"
-                type="text"
-                class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-                placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
-              />
+          <template v-if="form.type === 'telegram'">
+            <div class="space-y-2">
+              <Label for="telegramBotToken">Bot Token</Label>
+              <Input id="telegramBotToken" v-model="form.telegramBotToken" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" />
             </div>
-            <div>
-              <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Chat ID</label>
-              <input
-                v-model="form.telegramChatId"
-                type="text"
-                class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-                placeholder="-1001234567890"
-              />
+            <div class="space-y-2">
+              <Label for="telegramChatId">Chat ID</Label>
+              <Input id="telegramChatId" v-model="form.telegramChatId" placeholder="-1001234567890" />
             </div>
+          </template>
+
+          <div v-if="form.type === 'slack'" class="space-y-2">
+            <Label for="slackWebhook">Slack Webhook URL</Label>
+            <Input id="slackWebhook" v-model="form.slackWebhook" type="url" placeholder="https://hooks.slack.com/services/..." />
           </div>
 
-          <div v-if="form.type === 'slack'">
-            <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Slack Webhook URL</label>
-            <input
-              v-model="form.slackWebhook"
-              type="url"
-              class="w-full px-4 py-2.5 rounded-lg bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition"
-              placeholder="https://hooks.slack.com/services/..."
-            />
-          </div>
-
-          <div class="flex items-center gap-2">
+          <div class="flex items-center space-x-2">
             <input
               id="enabled"
               v-model="form.enabled"
               type="checkbox"
-              class="h-4 w-4 rounded border-slate-300 text-green-500 focus:ring-green-500"
+              class="h-4 w-4 rounded border-input"
             />
-            <label for="enabled" class="text-sm text-slate-700 dark:text-slate-300">Enabled</label>
+            <Label for="enabled">Enabled</Label>
           </div>
 
-          <div class="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              @click="closeModal"
-              class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="saving"
-              class="px-4 py-2 rounded-lg bg-green-500 hover:bg-green-600 text-white font-medium transition disabled:opacity-50"
-            >
+          <DialogFooter>
+            <Button type="button" variant="outline" @click="closeModal">Cancel</Button>
+            <Button type="submit" :disabled="saving">
+              <Loader2 v-if="saving" class="mr-2 h-4 w-4 animate-spin" />
               {{ saving ? 'Saving...' : (editing ? 'Update' : 'Create') }}
-            </button>
-          </div>
+            </Button>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
