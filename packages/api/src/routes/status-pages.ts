@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { eq, desc, inArray } from 'drizzle-orm';
+import { eq, desc, inArray, and } from 'drizzle-orm';
 import { createDb, statusPages, statusPageMonitors, monitors, heartbeats } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import type { Env } from '../types';
@@ -76,8 +76,10 @@ statusPagesRoute.get('/public/:slug', async (c) => {
 statusPagesRoute.use('*', createAuthMiddleware());
 
 statusPagesRoute.get('/', async (c) => {
+  const user = c.get('user');
   const db = createDb(c.env.DB);
   const pages = await db.query.statusPages.findMany({
+    where: eq(statusPages.userId, user.sub),
     orderBy: [desc(statusPages.createdAt)],
   });
 
@@ -95,10 +97,11 @@ statusPagesRoute.get('/', async (c) => {
 
 statusPagesRoute.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
 
   const page = await db.query.statusPages.findFirst({
-    where: eq(statusPages.id, id),
+    where: and(eq(statusPages.id, id), eq(statusPages.userId, user.sub)),
   });
 
   if (!page) {
@@ -114,6 +117,7 @@ statusPagesRoute.get('/:id', async (c) => {
 
 statusPagesRoute.post('/', zValidator('json', createStatusPageSchema), async (c) => {
   const data = c.req.valid('json');
+  const user = c.get('user');
   const { monitorIds, ...pageData } = data;
   const db = createDb(c.env.DB);
 
@@ -125,7 +129,7 @@ statusPagesRoute.post('/', zValidator('json', createStatusPageSchema), async (c)
     return c.json({ error: 'Slug already exists' }, 400);
   }
 
-  const result = await db.insert(statusPages).values(pageData).returning();
+  const result = await db.insert(statusPages).values({ ...pageData, userId: user.sub }).returning();
   const page = result[0];
 
   if (monitorIds && monitorIds.length > 0) {
@@ -143,12 +147,13 @@ statusPagesRoute.post('/', zValidator('json', createStatusPageSchema), async (c)
 
 statusPagesRoute.put('/:id', zValidator('json', updateStatusPageSchema), async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const data = c.req.valid('json');
   const { monitorIds, ...pageData } = data;
   const db = createDb(c.env.DB);
 
   const existing = await db.query.statusPages.findFirst({
-    where: eq(statusPages.id, id),
+    where: and(eq(statusPages.id, id), eq(statusPages.userId, user.sub)),
   });
 
   if (!existing) {
@@ -192,10 +197,11 @@ statusPagesRoute.put('/:id', zValidator('json', updateStatusPageSchema), async (
 
 statusPagesRoute.delete('/:id', async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
 
   const existing = await db.query.statusPages.findFirst({
-    where: eq(statusPages.id, id),
+    where: and(eq(statusPages.id, id), eq(statusPages.userId, user.sub)),
   });
 
   if (!existing) {

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { createDb, notifications } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import type { Env } from '../types';
@@ -20,8 +20,10 @@ const createNotificationSchema = z.object({
 const updateNotificationSchema = createNotificationSchema.partial();
 
 notificationsRoute.get('/', async (c) => {
+  const user = c.get('user');
   const db = createDb(c.env.DB);
   const result = await db.query.notifications.findMany({
+    where: eq(notifications.userId, user.sub),
     orderBy: [desc(notifications.createdAt)],
   });
   return c.json(result);
@@ -29,10 +31,11 @@ notificationsRoute.get('/', async (c) => {
 
 notificationsRoute.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
 
   const notification = await db.query.notifications.findFirst({
-    where: eq(notifications.id, id),
+    where: and(eq(notifications.id, id), eq(notifications.userId, user.sub)),
   });
 
   if (!notification) {
@@ -44,19 +47,21 @@ notificationsRoute.get('/:id', async (c) => {
 
 notificationsRoute.post('/', zValidator('json', createNotificationSchema), async (c) => {
   const data = c.req.valid('json');
+  const user = c.get('user');
   const db = createDb(c.env.DB);
 
-  const result = await db.insert(notifications).values(data).returning();
+  const result = await db.insert(notifications).values({ ...data, userId: user.sub }).returning();
   return c.json(result[0], 201);
 });
 
 notificationsRoute.put('/:id', zValidator('json', updateNotificationSchema), async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const data = c.req.valid('json');
   const db = createDb(c.env.DB);
 
   const existing = await db.query.notifications.findFirst({
-    where: eq(notifications.id, id),
+    where: and(eq(notifications.id, id), eq(notifications.userId, user.sub)),
   });
 
   if (!existing) {
@@ -74,10 +79,11 @@ notificationsRoute.put('/:id', zValidator('json', updateNotificationSchema), asy
 
 notificationsRoute.delete('/:id', async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
 
   const existing = await db.query.notifications.findFirst({
-    where: eq(notifications.id, id),
+    where: and(eq(notifications.id, id), eq(notifications.userId, user.sub)),
   });
 
   if (!existing) {
@@ -90,10 +96,11 @@ notificationsRoute.delete('/:id', async (c) => {
 
 notificationsRoute.post('/:id/test', async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
 
   const notification = await db.query.notifications.findFirst({
-    where: eq(notifications.id, id),
+    where: and(eq(notifications.id, id), eq(notifications.userId, user.sub)),
   });
 
   if (!notification) {

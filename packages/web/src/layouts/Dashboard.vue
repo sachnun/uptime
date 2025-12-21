@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useMonitorsStore } from '@/stores/monitors'
 import { useDarkMode } from '@/lib/darkMode'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -49,6 +50,8 @@ function toggleTheme() {
 }
 
 function handleLogout() {
+  const monitorsStore = useMonitorsStore()
+  monitorsStore.$reset()
   authStore.logout()
   router.push('/login')
 }

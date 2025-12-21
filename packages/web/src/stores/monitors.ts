@@ -94,6 +94,12 @@ export const useMonitorsStore = defineStore('monitors', () => {
     return await api.get(`/api/heartbeats/${monitorId}?hours=${hours}`)
   }
 
+  function $reset() {
+    monitors.value = []
+    loading.value = false
+    error.value = null
+  }
+
   return {
     monitors,
     loading,
@@ -106,5 +112,6 @@ export const useMonitorsStore = defineStore('monitors', () => {
     pauseMonitor,
     resumeMonitor,
     getHeartbeats,
+    $reset,
   }
 })

@@ -13,6 +13,7 @@ export const users = sqliteTable('users', {
 
 export const monitors = sqliteTable('monitors', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   type: text('type', { enum: ['http', 'https', 'tcp', 'dns'] }).notNull(),
   url: text('url'),
@@ -41,6 +42,7 @@ export const heartbeats = sqliteTable('heartbeats', {
 
 export const notifications = sqliteTable('notifications', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   type: text('type', { enum: ['webhook', 'discord', 'telegram', 'slack'] }).notNull(),
   config: text('config', { mode: 'json' }).$type<Record<string, string>>(),
@@ -56,6 +58,7 @@ export const monitorNotifications = sqliteTable('monitor_notifications', {
 
 export const statusPages = sqliteTable('status_pages', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   slug: text('slug').notNull().unique(),
   title: text('title').notNull(),
   description: text('description'),

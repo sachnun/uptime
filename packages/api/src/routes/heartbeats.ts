@@ -12,10 +12,11 @@ heartbeatsRoute.get('/:monitorId', async (c) => {
   const monitorId = parseInt(c.req.param('monitorId'));
   const hours = parseInt(c.req.query('hours') || '24');
   const limit = parseInt(c.req.query('limit') || '100');
+  const user = c.get('user');
   const db = createDb(c.env.DB);
 
   const monitor = await db.query.monitors.findFirst({
-    where: eq(monitors.id, monitorId),
+    where: and(eq(monitors.id, monitorId), eq(monitors.userId, user.sub)),
   });
 
   if (!monitor) {
@@ -38,7 +39,16 @@ heartbeatsRoute.get('/:monitorId', async (c) => {
 
 heartbeatsRoute.get('/:monitorId/stats', async (c) => {
   const monitorId = parseInt(c.req.param('monitorId'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
+
+  const monitor = await db.query.monitors.findFirst({
+    where: and(eq(monitors.id, monitorId), eq(monitors.userId, user.sub)),
+  });
+
+  if (!monitor) {
+    return c.json({ error: 'Monitor not found' }, 404);
+  }
 
   const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const last7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);

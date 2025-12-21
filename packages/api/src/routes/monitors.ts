@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { createDb, monitors, heartbeats, monitorNotifications } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import type { Env } from '../types';
@@ -29,8 +29,10 @@ const createMonitorSchema = z.object({
 const updateMonitorSchema = createMonitorSchema.partial();
 
 monitorsRoute.get('/', async (c) => {
+  const user = c.get('user');
   const db = createDb(c.env.DB);
   const allMonitors = await db.query.monitors.findMany({
+    where: eq(monitors.userId, user.sub),
     orderBy: [desc(monitors.createdAt)],
   });
 
@@ -66,10 +68,11 @@ monitorsRoute.get('/', async (c) => {
 
 monitorsRoute.get('/:id', async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
 
   const monitor = await db.query.monitors.findFirst({
-    where: eq(monitors.id, id),
+    where: and(eq(monitors.id, id), eq(monitors.userId, user.sub)),
   });
 
   if (!monitor) {
@@ -85,10 +88,11 @@ monitorsRoute.get('/:id', async (c) => {
 
 monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
   const data = c.req.valid('json');
+  const user = c.get('user');
   const { notificationIds, ...monitorData } = data;
   const db = createDb(c.env.DB);
 
-  const result = await db.insert(monitors).values(monitorData).returning();
+  const result = await db.insert(monitors).values({ ...monitorData, userId: user.sub }).returning();
   const monitor = result[0];
 
   if (notificationIds && notificationIds.length > 0) {
@@ -105,12 +109,13 @@ monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
 
 monitorsRoute.put('/:id', zValidator('json', updateMonitorSchema), async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const data = c.req.valid('json');
   const { notificationIds, ...monitorData } = data;
   const db = createDb(c.env.DB);
 
   const existing = await db.query.monitors.findFirst({
-    where: eq(monitors.id, id),
+    where: and(eq(monitors.id, id), eq(monitors.userId, user.sub)),
   });
 
   if (!existing) {
@@ -140,10 +145,11 @@ monitorsRoute.put('/:id', zValidator('json', updateMonitorSchema), async (c) => 
 
 monitorsRoute.delete('/:id', async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
 
   const existing = await db.query.monitors.findFirst({
-    where: eq(monitors.id, id),
+    where: and(eq(monitors.id, id), eq(monitors.userId, user.sub)),
   });
 
   if (!existing) {
@@ -156,7 +162,16 @@ monitorsRoute.delete('/:id', async (c) => {
 
 monitorsRoute.post('/:id/pause', async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
+
+  const existing = await db.query.monitors.findFirst({
+    where: and(eq(monitors.id, id), eq(monitors.userId, user.sub)),
+  });
+
+  if (!existing) {
+    return c.json({ error: 'Monitor not found' }, 404);
+  }
 
   await db.update(monitors).set({ active: false }).where(eq(monitors.id, id));
   return c.json({ success: true });
@@ -164,7 +179,16 @@ monitorsRoute.post('/:id/pause', async (c) => {
 
 monitorsRoute.post('/:id/resume', async (c) => {
   const id = parseInt(c.req.param('id'));
+  const user = c.get('user');
   const db = createDb(c.env.DB);
+
+  const existing = await db.query.monitors.findFirst({
+    where: and(eq(monitors.id, id), eq(monitors.userId, user.sub)),
+  });
+
+  if (!existing) {
+    return c.json({ error: 'Monitor not found' }, 404);
+  }
 
   await db.update(monitors).set({ active: true }).where(eq(monitors.id, id));
   return c.json({ success: true });
