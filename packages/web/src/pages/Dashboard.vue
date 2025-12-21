@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, onUnmounted, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useMonitorsStore } from '@/stores/monitors'
 import MonitorCard from '@/components/MonitorCard.vue'
@@ -9,18 +9,29 @@ import { Plus, CheckCircle, XCircle, PauseCircle, BarChart3, Loader2 } from 'luc
 
 const monitorsStore = useMonitorsStore()
 
-const upMonitors = computed(() => monitorsStore.monitors.filter(m => m.latestHeartbeat?.status === true).length)
-const downMonitors = computed(() => monitorsStore.monitors.filter(m => m.latestHeartbeat?.status === false).length)
-const pausedMonitors = computed(() => monitorsStore.monitors.filter(m => !m.active).length)
+const monitorStats = computed(() => {
+  let up = 0, down = 0, paused = 0
+  for (const m of monitorsStore.monitors) {
+    if (!m.active) paused++
+    else if (m.latestHeartbeat?.status === true) up++
+    else if (m.latestHeartbeat?.status === false) down++
+  }
+  return { up, down, paused }
+})
+
+let interval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   monitorsStore.fetchMonitors()
-  
-  const interval = setInterval(() => {
+  interval = setInterval(() => {
     monitorsStore.fetchMonitors()
   }, 30000)
+})
 
-  return () => clearInterval(interval)
+onUnmounted(() => {
+  if (interval) {
+    clearInterval(interval)
+  }
 })
 </script>
 
@@ -48,7 +59,7 @@ onMounted(() => {
             </div>
             <div class="text-center sm:text-left">
               <p class="text-xs sm:text-sm text-muted-foreground">Up</p>
-              <p class="text-xl sm:text-2xl font-bold">{{ upMonitors }}</p>
+              <p class="text-xl sm:text-2xl font-bold">{{ monitorStats.up }}</p>
             </div>
           </div>
         </CardContent>
@@ -62,7 +73,7 @@ onMounted(() => {
             </div>
             <div class="text-center sm:text-left">
               <p class="text-xs sm:text-sm text-muted-foreground">Down</p>
-              <p class="text-xl sm:text-2xl font-bold">{{ downMonitors }}</p>
+              <p class="text-xl sm:text-2xl font-bold">{{ monitorStats.down }}</p>
             </div>
           </div>
         </CardContent>
@@ -76,7 +87,7 @@ onMounted(() => {
             </div>
             <div class="text-center sm:text-left">
               <p class="text-xs sm:text-sm text-muted-foreground">Paused</p>
-              <p class="text-xl sm:text-2xl font-bold">{{ pausedMonitors }}</p>
+              <p class="text-xl sm:text-2xl font-bold">{{ monitorStats.paused }}</p>
             </div>
           </div>
         </CardContent>

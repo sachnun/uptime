@@ -1,4 +1,4 @@
-import { eq, desc, and, inArray } from 'drizzle-orm';
+import { eq, desc, and, inArray, lte } from 'drizzle-orm';
 import { createDb, monitors, heartbeats, monitorNotifications, notifications } from '../db';
 import { runMonitorCheck } from '../monitors';
 import { sendNotification } from '../notifications';
@@ -16,34 +16,31 @@ export async function handleScheduled(env: Env): Promise<void> {
   }
 
   const now = Date.now();
+  const monitorIds = activeMonitors.map(m => m.id);
 
-  const checksToRun = await Promise.all(
-    activeMonitors.map(async (monitor) => {
-      const lastHeartbeat = await db.query.heartbeats.findFirst({
-        where: eq(heartbeats.monitorId, monitor.id),
-        orderBy: [desc(heartbeats.createdAt)],
-      });
+  const allLastHeartbeats = await db.query.heartbeats.findMany({
+    where: inArray(heartbeats.monitorId, monitorIds),
+    orderBy: [desc(heartbeats.createdAt)],
+  });
 
-      const intervalMs = (monitor.interval || 60) * 1000;
-      const lastCheckTime = lastHeartbeat?.createdAt?.getTime() || 0;
+  const lastHeartbeatByMonitor = new Map<number, typeof allLastHeartbeats[0]>();
+  for (const hb of allLastHeartbeats) {
+    if (!lastHeartbeatByMonitor.has(hb.monitorId)) {
+      lastHeartbeatByMonitor.set(hb.monitorId, hb);
+    }
+  }
 
-      if (now - lastCheckTime >= intervalMs) {
-        return monitor;
-      }
-      return null;
-    })
-  );
-
-  const monitorsToCheck = checksToRun.filter((m): m is NonNullable<typeof m> => m !== null);
+  const monitorsToCheck = activeMonitors.filter((monitor) => {
+    const lastHeartbeat = lastHeartbeatByMonitor.get(monitor.id);
+    const intervalMs = (monitor.interval || 60) * 1000;
+    const lastCheckTime = lastHeartbeat?.createdAt?.getTime() || 0;
+    return now - lastCheckTime >= intervalMs;
+  });
 
   await Promise.all(
     monitorsToCheck.map(async (monitor) => {
       const result = await runMonitorCheck(monitor);
-
-      const previousHeartbeat = await db.query.heartbeats.findFirst({
-        where: eq(heartbeats.monitorId, monitor.id),
-        orderBy: [desc(heartbeats.createdAt)],
-      });
+      const previousHeartbeat = lastHeartbeatByMonitor.get(monitor.id);
 
       await db.insert(heartbeats).values({
         monitorId: monitor.id,
@@ -91,8 +88,8 @@ export async function handleScheduled(env: Env): Promise<void> {
 
   const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
   await db.delete(heartbeats).where(
-    and(
-      eq(heartbeats.createdAt, thirtyDaysAgo)
-    )
-  ).catch(() => {});
+    lte(heartbeats.createdAt, thirtyDaysAgo)
+  ).catch((error) => {
+    console.error('Failed to cleanup old heartbeats:', error);
+  });
 }

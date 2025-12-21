@@ -51,6 +51,8 @@ export const useMonitorsStore = defineStore('monitors', () => {
   }
 
   async function getMonitor(id: number): Promise<Monitor | null> {
+    const cached = monitors.value.find(m => m.id === id)
+    if (cached) return cached
     try {
       return await api.get(`/api/monitors/${id}`)
     } catch {

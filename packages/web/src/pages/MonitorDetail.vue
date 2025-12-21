@@ -26,6 +26,11 @@ const status = computed(() => {
   return { text: 'Pending', variant: 'secondary' as const, color: 'bg-muted-foreground' }
 })
 
+const displayedHeartbeats = computed(() => {
+  const reversed = [...heartbeats.value].reverse()
+  return reversed.slice(0, 90)
+})
+
 async function loadData() {
   loading.value = true
   await monitorsStore.fetchMonitors()
@@ -161,7 +166,7 @@ watch(() => route.params.id, loadData)
       <CardContent>
           <div class="flex items-end gap-0.5 h-24">
           <div
-            v-for="hb in heartbeats.slice().reverse().slice(0, 90)"
+            v-for="hb in displayedHeartbeats"
             :key="hb.id"
             :class="cn(
               'flex-1 min-w-[2px] sm:min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',

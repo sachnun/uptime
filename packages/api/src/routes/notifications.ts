@@ -6,6 +6,11 @@ import { createDb, notifications } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import type { Env } from '../types';
 
+function parseId(id: string): number | null {
+  const parsed = parseInt(id, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 const notificationsRoute = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 notificationsRoute.use('*', createAuthMiddleware());
@@ -13,7 +18,7 @@ notificationsRoute.use('*', createAuthMiddleware());
 const createNotificationSchema = z.object({
   name: z.string().min(1).max(100),
   type: z.enum(['webhook', 'discord', 'telegram', 'slack']),
-  config: z.record(z.string()),
+  config: z.record(z.string(), z.string()),
   active: z.boolean().default(true),
 });
 
@@ -30,7 +35,10 @@ notificationsRoute.get('/', async (c) => {
 });
 
 notificationsRoute.get('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid notification ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 
@@ -55,7 +63,10 @@ notificationsRoute.post('/', zValidator('json', createNotificationSchema), async
 });
 
 notificationsRoute.put('/:id', zValidator('json', updateNotificationSchema), async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid notification ID' }, 400);
+  }
   const user = c.get('user');
   const data = c.req.valid('json');
   const db = createDb(c.env.DB);
@@ -78,7 +89,10 @@ notificationsRoute.put('/:id', zValidator('json', updateNotificationSchema), asy
 });
 
 notificationsRoute.delete('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid notification ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 
@@ -95,7 +109,10 @@ notificationsRoute.delete('/:id', async (c) => {
 });
 
 notificationsRoute.post('/:id/test', async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid notification ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 

@@ -12,19 +12,22 @@ type NotificationPayload = {
 
 export async function sendNotification(notification: Notification, payload: NotificationPayload): Promise<void> {
   if (!notification.active) return;
+  if (!notification.config) {
+    throw new Error('Notification config is missing');
+  }
 
   switch (notification.type) {
     case 'webhook':
-      await sendWebhook(notification.config!, payload);
+      await sendWebhook(notification.config, payload);
       break;
     case 'discord':
-      await sendDiscord(notification.config!, payload);
+      await sendDiscord(notification.config, payload);
       break;
     case 'telegram':
-      await sendTelegram(notification.config!, payload);
+      await sendTelegram(notification.config, payload);
       break;
     case 'slack':
-      await sendSlack(notification.config!, payload);
+      await sendSlack(notification.config, payload);
       break;
     default:
       throw new Error(`Unknown notification type: ${notification.type}`);

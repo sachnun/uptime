@@ -1,10 +1,15 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { eq, desc, and } from 'drizzle-orm';
-import { createDb, monitors, heartbeats, monitorNotifications } from '../db';
+import { eq, desc, and, inArray } from 'drizzle-orm';
+import { createDb, monitors, heartbeats, monitorNotifications, notifications } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import type { Env } from '../types';
+
+function parseId(id: string): number | null {
+  const parsed = parseInt(id, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
 
 const monitorsRoute = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
@@ -36,38 +41,50 @@ monitorsRoute.get('/', async (c) => {
     orderBy: [desc(monitors.createdAt)],
   });
 
-  const result = await Promise.all(
-    allMonitors.map(async (monitor) => {
-      const latestHeartbeat = await db.query.heartbeats.findFirst({
-        where: eq(heartbeats.monitorId, monitor.id),
-        orderBy: [desc(heartbeats.createdAt)],
-      });
+  if (allMonitors.length === 0) {
+    return c.json([]);
+  }
 
-      const recentHeartbeats = await db.query.heartbeats.findMany({
-        where: eq(heartbeats.monitorId, monitor.id),
-        orderBy: [desc(heartbeats.createdAt)],
-        limit: 50,
-      });
+  const monitorIds = allMonitors.map(m => m.id);
 
-      const upCount = recentHeartbeats.filter(h => h.status).length;
-      const uptime = recentHeartbeats.length > 0 ? (upCount / recentHeartbeats.length) * 100 : 0;
+  const allHeartbeats = await db.query.heartbeats.findMany({
+    where: inArray(heartbeats.monitorId, monitorIds),
+    orderBy: [desc(heartbeats.createdAt)],
+  });
 
-      return {
-        ...monitor,
-        latestHeartbeat,
-        uptime: Math.round(uptime * 100) / 100,
-        avgResponseTime: recentHeartbeats.length > 0
-          ? Math.round(recentHeartbeats.reduce((sum, h) => sum + (h.responseTime || 0), 0) / recentHeartbeats.length)
-          : 0,
-      };
-    })
-  );
+  const heartbeatsByMonitor = new Map<number, typeof allHeartbeats>();
+  for (const hb of allHeartbeats) {
+    const existing = heartbeatsByMonitor.get(hb.monitorId) || [];
+    existing.push(hb);
+    heartbeatsByMonitor.set(hb.monitorId, existing);
+  }
+
+  const result = allMonitors.map((monitor) => {
+    const monitorHeartbeats = heartbeatsByMonitor.get(monitor.id) || [];
+    const recentHeartbeats = monitorHeartbeats.slice(0, 50);
+    const latestHeartbeat = monitorHeartbeats[0] || null;
+
+    const upCount = recentHeartbeats.filter(h => h.status).length;
+    const uptime = recentHeartbeats.length > 0 ? (upCount / recentHeartbeats.length) * 100 : 0;
+
+    return {
+      ...monitor,
+      latestHeartbeat,
+      uptime: Math.round(uptime * 100) / 100,
+      avgResponseTime: recentHeartbeats.length > 0
+        ? Math.round(recentHeartbeats.reduce((sum, h) => sum + (h.responseTime || 0), 0) / recentHeartbeats.length)
+        : 0,
+    };
+  });
 
   return c.json(result);
 });
 
 monitorsRoute.get('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 
@@ -92,6 +109,18 @@ monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
   const { notificationIds, ...monitorData } = data;
   const db = createDb(c.env.DB);
 
+  if (notificationIds && notificationIds.length > 0) {
+    const validNotifications = await db.query.notifications.findMany({
+      where: and(
+        inArray(notifications.id, notificationIds),
+        eq(notifications.userId, user.sub)
+      ),
+    });
+    if (validNotifications.length !== notificationIds.length) {
+      return c.json({ error: 'Invalid notification IDs' }, 400);
+    }
+  }
+
   const result = await db.insert(monitors).values({ ...monitorData, userId: user.sub }).returning();
   const monitor = result[0];
 
@@ -108,7 +137,10 @@ monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
 });
 
 monitorsRoute.put('/:id', zValidator('json', updateMonitorSchema), async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
   const user = c.get('user');
   const data = c.req.valid('json');
   const { notificationIds, ...monitorData } = data;
@@ -120,6 +152,18 @@ monitorsRoute.put('/:id', zValidator('json', updateMonitorSchema), async (c) => 
 
   if (!existing) {
     return c.json({ error: 'Monitor not found' }, 404);
+  }
+
+  if (notificationIds && notificationIds.length > 0) {
+    const validNotifications = await db.query.notifications.findMany({
+      where: and(
+        inArray(notifications.id, notificationIds),
+        eq(notifications.userId, user.sub)
+      ),
+    });
+    if (validNotifications.length !== notificationIds.length) {
+      return c.json({ error: 'Invalid notification IDs' }, 400);
+    }
   }
 
   const result = await db
@@ -144,7 +188,10 @@ monitorsRoute.put('/:id', zValidator('json', updateMonitorSchema), async (c) => 
 });
 
 monitorsRoute.delete('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 
@@ -161,7 +208,10 @@ monitorsRoute.delete('/:id', async (c) => {
 });
 
 monitorsRoute.post('/:id/pause', async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 
@@ -178,7 +228,10 @@ monitorsRoute.post('/:id/pause', async (c) => {
 });
 
 monitorsRoute.post('/:id/resume', async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 

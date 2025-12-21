@@ -4,12 +4,20 @@ import { createDb, heartbeats, monitors } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import type { Env } from '../types';
 
+function parseId(id: string): number | null {
+  const parsed = parseInt(id, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 const heartbeatsRoute = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 heartbeatsRoute.use('*', createAuthMiddleware());
 
 heartbeatsRoute.get('/:monitorId', async (c) => {
-  const monitorId = parseInt(c.req.param('monitorId'));
+  const monitorId = parseId(c.req.param('monitorId'));
+  if (monitorId === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
   const hours = parseInt(c.req.query('hours') || '24');
   const limit = parseInt(c.req.query('limit') || '100');
   const user = c.get('user');
@@ -38,7 +46,10 @@ heartbeatsRoute.get('/:monitorId', async (c) => {
 });
 
 heartbeatsRoute.get('/:monitorId/stats', async (c) => {
-  const monitorId = parseInt(c.req.param('monitorId'));
+  const monitorId = parseId(c.req.param('monitorId'));
+  if (monitorId === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 
@@ -50,23 +61,21 @@ heartbeatsRoute.get('/:monitorId/stats', async (c) => {
     return c.json({ error: 'Monitor not found' }, 404);
   }
 
-  const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const last7d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const last30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [beats24h, beats7d, beats30d] = await Promise.all([
-    db.query.heartbeats.findMany({
-      where: and(eq(heartbeats.monitorId, monitorId), gte(heartbeats.createdAt, last24h)),
-    }),
-    db.query.heartbeats.findMany({
-      where: and(eq(heartbeats.monitorId, monitorId), gte(heartbeats.createdAt, last7d)),
-    }),
-    db.query.heartbeats.findMany({
-      where: and(eq(heartbeats.monitorId, monitorId), gte(heartbeats.createdAt, last30d)),
-    }),
-  ]);
+  const beats30d = await db.query.heartbeats.findMany({
+    where: and(eq(heartbeats.monitorId, monitorId), gte(heartbeats.createdAt, last30d)),
+    orderBy: [desc(heartbeats.createdAt)],
+  });
 
-  const calcStats = (beats: typeof beats24h) => {
+  const now = Date.now();
+  const last24hMs = now - 24 * 60 * 60 * 1000;
+  const last7dMs = now - 7 * 24 * 60 * 60 * 1000;
+
+  const beats24h = beats30d.filter(b => b.createdAt && b.createdAt.getTime() >= last24hMs);
+  const beats7d = beats30d.filter(b => b.createdAt && b.createdAt.getTime() >= last7dMs);
+
+  const calcStats = (beats: typeof beats30d) => {
     if (beats.length === 0) return { uptime: 0, avgResponseTime: 0, totalChecks: 0 };
     const upCount = beats.filter(b => b.status).length;
     const avgResponse = beats.reduce((sum, b) => sum + (b.responseTime || 0), 0) / beats.length;

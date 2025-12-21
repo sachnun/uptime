@@ -6,6 +6,11 @@ import { createDb, statusPages, statusPageMonitors, monitors, heartbeats } from 
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import type { Env } from '../types';
 
+function parseId(id: string): number | null {
+  const parsed = parseInt(id, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 const statusPagesRoute = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 const createStatusPageSchema = z.object({
@@ -44,31 +49,37 @@ statusPagesRoute.get('/public/:slug', async (c) => {
     where: inArray(monitors.id, monitorIds),
   });
 
-  const monitorsWithStatus = await Promise.all(
-    monitorList.map(async (monitor) => {
-      const recentHeartbeats = await db.query.heartbeats.findMany({
-        where: eq(heartbeats.monitorId, monitor.id),
-        orderBy: [desc(heartbeats.createdAt)],
-        limit: 90,
-      });
+  const allHeartbeats = await db.query.heartbeats.findMany({
+    where: inArray(heartbeats.monitorId, monitorIds),
+    orderBy: [desc(heartbeats.createdAt)],
+  });
 
-      const latestHeartbeat = recentHeartbeats[0];
-      const upCount = recentHeartbeats.filter(h => h.status).length;
-      const uptime = recentHeartbeats.length > 0 ? (upCount / recentHeartbeats.length) * 100 : 0;
+  const heartbeatsByMonitor = new Map<number, typeof allHeartbeats>();
+  for (const hb of allHeartbeats) {
+    const existing = heartbeatsByMonitor.get(hb.monitorId) || [];
+    existing.push(hb);
+    heartbeatsByMonitor.set(hb.monitorId, existing);
+  }
 
-      return {
-        id: monitor.id,
-        name: monitor.name,
-        status: latestHeartbeat?.status ?? null,
-        uptime: Math.round(uptime * 100) / 100,
-        heartbeats: recentHeartbeats.map(h => ({
-          status: h.status,
-          responseTime: h.responseTime,
-          createdAt: h.createdAt,
-        })),
-      };
-    })
-  );
+  const monitorsWithStatus = monitorList.map((monitor) => {
+    const monitorHeartbeats = heartbeatsByMonitor.get(monitor.id) || [];
+    const recentHeartbeats = monitorHeartbeats.slice(0, 90);
+    const latestHeartbeat = monitorHeartbeats[0];
+    const upCount = recentHeartbeats.filter(h => h.status).length;
+    const uptime = recentHeartbeats.length > 0 ? (upCount / recentHeartbeats.length) * 100 : 0;
+
+    return {
+      id: monitor.id,
+      name: monitor.name,
+      status: latestHeartbeat?.status ?? null,
+      uptime: Math.round(uptime * 100) / 100,
+      heartbeats: recentHeartbeats.map(h => ({
+        status: h.status,
+        responseTime: h.responseTime,
+        createdAt: h.createdAt,
+      })),
+    };
+  });
 
   return c.json({ ...page, monitors: monitorsWithStatus });
 });
@@ -96,7 +107,10 @@ statusPagesRoute.get('/', async (c) => {
 });
 
 statusPagesRoute.get('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid status page ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 
@@ -146,7 +160,10 @@ statusPagesRoute.post('/', zValidator('json', createStatusPageSchema), async (c)
 });
 
 statusPagesRoute.put('/:id', zValidator('json', updateStatusPageSchema), async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid status page ID' }, 400);
+  }
   const user = c.get('user');
   const data = c.req.valid('json');
   const { monitorIds, ...pageData } = data;
@@ -196,7 +213,10 @@ statusPagesRoute.put('/:id', zValidator('json', updateStatusPageSchema), async (
 });
 
 statusPagesRoute.delete('/:id', async (c) => {
-  const id = parseInt(c.req.param('id'));
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid status page ID' }, 400);
+  }
   const user = c.get('user');
   const db = createDb(c.env.DB);
 

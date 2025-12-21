@@ -1,4 +1,3 @@
-import { Hono } from 'hono';
 import type { Env, JWTPayload } from '../types';
 import { verifyJWT } from '../lib';
 
