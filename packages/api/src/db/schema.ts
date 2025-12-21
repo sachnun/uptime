@@ -98,3 +98,14 @@ export const hourlyStats = sqliteTable('hourly_stats', {
   upCount: integer('up_count').notNull().default(0),
   downCount: integer('down_count').notNull().default(0),
 });
+
+export const apiKeys = sqliteTable('api_keys', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  keyHash: text('key_hash').notNull(),
+  prefix: text('prefix').notNull(),
+  lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
+});

@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { auth, monitorsRoute, heartbeatsRoute, notificationsRoute, statusPagesRoute } from './routes';
+import { auth, monitorsRoute, heartbeatsRoute, notificationsRoute, statusPagesRoute, apiKeysRoute } from './routes';
 import { handleScheduled } from './cron';
 import type { Env } from './types';
 
@@ -11,7 +11,7 @@ app.use('*', logger());
 app.use('/api/*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
 }));
 
 app.route('/api/auth', auth);
@@ -19,6 +19,7 @@ app.route('/api/monitors', monitorsRoute);
 app.route('/api/heartbeats', heartbeatsRoute);
 app.route('/api/notifications', notificationsRoute);
 app.route('/api/status-pages', statusPagesRoute);
+app.route('/api/keys', apiKeysRoute);
 
 app.get('/api/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
