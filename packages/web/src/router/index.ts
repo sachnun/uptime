@@ -50,6 +50,11 @@ const router = createRouter({
           name: 'settings',
           component: () => import('@/pages/Settings.vue'),
         },
+        {
+          path: 'docs',
+          name: 'docs',
+          component: () => import('@/pages/ApiDocs.vue'),
+        },
       ],
     },
     {

@@ -21,6 +21,7 @@ import {
   PanelLeft,
   Menu,
   X,
+  Code,
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -34,6 +35,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Status Pages', href: '/status-pages', icon: FileText },
+  { name: 'API Docs', href: '/docs', icon: Code },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
