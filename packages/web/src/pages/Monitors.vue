@@ -118,7 +118,7 @@ onUnmounted(() => {
       </Button>
     </Card>
 
-    <div v-else class="space-y-3">
+    <div v-else class="space-y-4">
       <MonitorCard
         v-for="monitor in monitorsStore.monitors"
         :key="monitor.id"
