@@ -204,9 +204,9 @@ const userInitial = computed(() => {
         <Button variant="ghost" size="icon" class="h-9 w-9" @click="mobileMenuOpen = true">
           <Menu class="h-5 w-5" />
         </Button>
-        <RouterLink to="/" class="flex items-center gap-2">
+        <button class="flex items-center gap-2" @click="mobileMenuOpen = true">
           <span class="font-semibold">Uptime</span>
-        </RouterLink>
+        </button>
       </header>
 
       <main :class="cn('min-h-screen transition-all duration-300 pt-14 lg:pt-0', sidebarOpen ? 'lg:ml-64' : 'lg:ml-16')">

@@ -181,7 +181,7 @@ watch(() => route.params.id, loadData)
         <CardTitle>Response Time (Last 24h)</CardTitle>
       </CardHeader>
       <CardContent>
-          <div class="flex items-end gap-0.5 h-24">
+          <div class="flex items-end gap-0.5 h-24 overflow-hidden">
           <div
             v-for="hb in displayedHeartbeats"
             :key="hb.id"
