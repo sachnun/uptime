@@ -18,17 +18,18 @@ export async function handleScheduled(env: Env): Promise<void> {
   const now = Date.now();
   const monitorIds = activeMonitors.map(m => m.id);
 
-  const allLastHeartbeats = await db.query.heartbeats.findMany({
-    where: inArray(heartbeats.monitorId, monitorIds),
-    orderBy: [desc(heartbeats.createdAt)],
-  });
-
-  const lastHeartbeatByMonitor = new Map<number, typeof allLastHeartbeats[0]>();
-  for (const hb of allLastHeartbeats) {
-    if (!lastHeartbeatByMonitor.has(hb.monitorId)) {
-      lastHeartbeatByMonitor.set(hb.monitorId, hb);
-    }
-  }
+  const lastHeartbeatByMonitor = new Map<number, { monitorId: number; status: boolean; createdAt: Date | null }>();
+  await Promise.all(
+    monitorIds.map(async (monitorId) => {
+      const hb = await db.query.heartbeats.findFirst({
+        where: eq(heartbeats.monitorId, monitorId),
+        orderBy: [desc(heartbeats.createdAt)],
+      });
+      if (hb) {
+        lastHeartbeatByMonitor.set(monitorId, hb);
+      }
+    })
+  );
 
   const monitorsToCheck = activeMonitors.filter((monitor) => {
     const maintenanceStart = monitor.maintenanceStart?.getTime();
@@ -133,12 +134,18 @@ export async function handleScheduled(env: Env): Promise<void> {
     })
   );
 
-  const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
-  await db.delete(heartbeats).where(
-    lte(heartbeats.createdAt, thirtyDaysAgo)
-  ).catch((error) => {
-    console.error('Failed to cleanup old heartbeats:', error);
-  });
+  const currentHour = new Date(now).getUTCHours();
+  const currentMinute = new Date(now).getUTCMinutes();
+  const shouldRunCleanup = currentHour === 0 && currentMinute < 5;
+
+  if (shouldRunCleanup) {
+    const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
+    await db.delete(heartbeats).where(
+      lte(heartbeats.createdAt, thirtyDaysAgo)
+    ).catch((error) => {
+      console.error('Failed to cleanup old heartbeats:', error);
+    });
+  }
 
   await aggregateHourlyStats(db, monitorIds, now);
 }
