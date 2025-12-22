@@ -87,6 +87,19 @@ const userInitial = computed(() => {
           <RouterLink to="/" :class="cn('flex items-center', sidebarOpen ? 'gap-2' : 'lg:justify-center gap-2 lg:gap-0')" @click="mobileMenuOpen = false">
             <span :class="cn('font-semibold text-sidebar-foreground', sidebarOpen ? '' : 'lg:hidden')">Uptime</span>
           </RouterLink>
+          <Tooltip v-if="!sidebarOpen">
+            <TooltipTrigger as-child>
+              <Button
+                class="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent hidden lg:flex"
+                variant="ghost"
+                size="icon"
+                @click="sidebarOpen = true"
+              >
+                <PanelLeft class="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Expand sidebar</TooltipContent>
+          </Tooltip>
           <Button
             :class="cn('h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent', sidebarOpen ? '' : 'lg:hidden')"
             variant="ghost"
@@ -135,14 +148,6 @@ const userInitial = computed(() => {
 
         <div class="border-t border-sidebar-border p-2">
           <div v-if="!sidebarOpen" class="flex-col items-center gap-1 hidden lg:flex">
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <Button variant="ghost" size="icon" class="h-10 w-10 text-sidebar-foreground hover:bg-sidebar-accent" @click="sidebarOpen = true">
-                  <PanelLeft class="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="right">Expand sidebar</TooltipContent>
-            </Tooltip>
             <Tooltip>
               <TooltipTrigger as-child>
                 <Button variant="ghost" size="icon" class="h-10 w-10 text-sidebar-foreground hover:bg-sidebar-accent" @click="toggleTheme">
