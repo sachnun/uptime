@@ -22,6 +22,7 @@ const saving = ref(false)
 const testing = ref(false)
 const error = ref('')
 const testResult = ref<TestMonitorResult | null>(null)
+const formRef = ref<HTMLFormElement | null>(null)
 
 const form = ref({
   name: '',
@@ -91,16 +92,6 @@ async function loadMonitor() {
 }
 
 async function handleSubmit() {
-  if (showUrl.value && !form.value.url) {
-    error.value = 'URL is required'
-    return
-  }
-
-  if (showHostname.value && !form.value.hostname) {
-    error.value = 'Hostname is required'
-    return
-  }
-
   saving.value = true
   error.value = ''
 
@@ -166,14 +157,7 @@ onMounted(loadMonitor)
 watch(() => route.params.id, loadMonitor)
 
 async function handleTest() {
-  if (showUrl.value && !form.value.url) {
-    error.value = 'URL is required to test'
-    return
-  }
-  if (showHostname.value && !form.value.hostname) {
-    error.value = 'Hostname is required to test'
-    return
-  }
+  if (!formRef.value?.reportValidity()) return
 
   testing.value = true
   error.value = ''
@@ -248,7 +232,7 @@ async function handleTest() {
       <Loader2 class="h-8 w-8 animate-spin text-primary" />
     </div>
 
-    <form v-else @submit.prevent="handleSubmit" class="max-w-2xl space-y-6">
+    <form v-else ref="formRef" @submit.prevent="handleSubmit" class="max-w-2xl space-y-6">
       <div v-if="error" class="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive">
         {{ error }}
       </div>
@@ -280,17 +264,17 @@ async function handleTest() {
 
           <div v-if="showUrl" class="space-y-2">
             <Label for="url">URL</Label>
-            <Input id="url" v-model="form.url" type="url" placeholder="https://example.com" />
+            <Input id="url" v-model="form.url" type="url" placeholder="https://example.com" required />
           </div>
 
           <div v-if="showHostname" class="space-y-2">
             <Label for="hostname">Hostname</Label>
-            <Input id="hostname" v-model="form.hostname" placeholder="example.com" />
+            <Input id="hostname" v-model="form.hostname" placeholder="example.com" required />
           </div>
 
           <div v-if="showPort" class="space-y-2">
             <Label for="port">Port</Label>
-            <Input id="port" v-model.number="form.port" type="number" min="1" max="65535" />
+            <Input id="port" v-model.number="form.port" type="number" min="1" max="65535" required />
           </div>
 
           <div v-if="showHttpOptions" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
