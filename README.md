@@ -7,16 +7,6 @@ Self-hosted uptime monitoring on [Cloudflare Workers](https://workers.cloudflare
 - **Multi-protocol Monitoring** — HTTP/HTTPS, TCP, DNS
 - **Notifications** — [Discord](https://discord.com/developers/docs/resources/webhook), [Slack](https://api.slack.com/messaging/webhooks), [Telegram](https://core.telegram.org/bots/api), Webhook
 - **Status Pages** — Public status pages with custom slugs
-- **Modern Stack** — [Vue 3](https://vuejs.org/) + [Hono](https://hono.dev/) + [Drizzle ORM](https://orm.drizzle.team/)
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Frontend | [Vue 3](https://vuejs.org/) + [Vite](https://vite.dev/) + [Tailwind CSS](https://tailwindcss.com/) |
-| Backend | [Hono](https://hono.dev/) on [Cloudflare Workers](https://workers.cloudflare.com/) |
-| Database | [Cloudflare D1](https://developers.cloudflare.com/d1/) + [Drizzle ORM](https://orm.drizzle.team/) |
-| Auth | JWT + OAuth ([GitHub](https://docs.github.com/en/apps/oauth-apps), [Google](https://developers.google.com/identity/protocols/oauth2)) |
 
 ## Quick Start
 
