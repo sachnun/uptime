@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { useMonitorsStore } from '@/stores/monitors'
 import MonitorCard from '@/components/MonitorCard.vue'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Plus, CheckCircle, XCircle, PauseCircle, BarChart3, Loader2 } from 'lucide-vue-next'
 
@@ -23,6 +24,7 @@ let interval: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   monitorsStore.fetchMonitors()
+  monitorsStore.fetchLimits()
   interval = setInterval(() => {
     monitorsStore.fetchMonitors()
   }, 30000)
@@ -39,7 +41,12 @@ onUnmounted(() => {
   <div>
     <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Monitors</h1>
+        <div class="flex items-center gap-3">
+          <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Monitors</h1>
+          <Badge v-if="monitorsStore.limits" variant="secondary">
+            {{ monitorsStore.limits.used }} / {{ monitorsStore.limits.limit }}
+          </Badge>
+        </div>
         <p class="text-muted-foreground text-sm sm:text-base">Monitor your services in real-time</p>
       </div>
       <Button as-child class="w-full sm:w-auto">

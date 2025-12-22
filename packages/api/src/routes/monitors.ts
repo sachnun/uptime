@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { eq, desc, and, inArray } from 'drizzle-orm';
+import { eq, desc, and, inArray, count } from 'drizzle-orm';
 import { createDb, monitors, heartbeats, monitorNotifications, notifications } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import { runMonitorCheck } from '../monitors';
@@ -135,6 +135,12 @@ monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
   const user = c.get('user');
   const { notificationIds, maintenanceStart, maintenanceEnd, ...monitorData } = data;
   const db = createDb(c.env.DB);
+
+  const maxMonitors = parseInt(c.env.MAX_MONITORS_PER_USER || '100', 10);
+  const [{ total }] = await db.select({ total: count() }).from(monitors).where(eq(monitors.userId, user.sub));
+  if (total >= maxMonitors) {
+    return c.json({ error: `Monitor limit reached (max ${maxMonitors})` }, 400);
+  }
 
   if (notificationIds && notificationIds.length > 0) {
     const validNotifications = await db.query.notifications.findMany({
@@ -328,6 +334,14 @@ monitorsRoute.post('/test', zValidator('json', testMonitorSchema), async (c) => 
     responseTime: result.responseTime,
     message: result.message,
   });
+});
+
+monitorsRoute.get('/limits', async (c) => {
+  const user = c.get('user');
+  const db = createDb(c.env.DB);
+  const maxMonitors = parseInt(c.env.MAX_MONITORS_PER_USER || '100', 10);
+  const [{ total }] = await db.select({ total: count() }).from(monitors).where(eq(monitors.userId, user.sub));
+  return c.json({ used: total, limit: maxMonitors });
 });
 
 export { monitorsRoute };

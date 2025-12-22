@@ -46,6 +46,7 @@ export const useMonitorsStore = defineStore('monitors', () => {
   const monitors = ref<Monitor[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const limits = ref<{ used: number; limit: number } | null>(null)
 
   async function fetchMonitors() {
     loading.value = true
@@ -56,6 +57,14 @@ export const useMonitorsStore = defineStore('monitors', () => {
       error.value = e instanceof Error ? e.message : 'Failed to fetch monitors'
     } finally {
       loading.value = false
+    }
+  }
+
+  async function fetchLimits() {
+    try {
+      limits.value = await api.get('/api/monitors/limits')
+    } catch {
+      limits.value = null
     }
   }
 
@@ -113,13 +122,16 @@ export const useMonitorsStore = defineStore('monitors', () => {
     monitors.value = []
     loading.value = false
     error.value = null
+    limits.value = null
   }
 
   return {
     monitors,
     loading,
     error,
+    limits,
     fetchMonitors,
+    fetchLimits,
     getMonitor,
     createMonitor,
     updateMonitor,

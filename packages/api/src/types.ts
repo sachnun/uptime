@@ -8,6 +8,7 @@ export type Env = {
   GOOGLE_CLIENT_SECRET: string;
   RESEND_API_KEY: string;
   EMAIL_FROM: string;
+  MAX_MONITORS_PER_USER?: string;
 };
 
 export type MonitorType = 'http' | 'https' | 'tcp' | 'dns';
