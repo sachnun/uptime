@@ -74,22 +74,22 @@ monitorsRoute.get('/', async (c) => {
 
   const monitorIds = allMonitors.map(m => m.id);
 
-  const allHeartbeats = await db.query.heartbeats.findMany({
-    where: inArray(heartbeats.monitorId, monitorIds),
-    orderBy: [desc(heartbeats.createdAt)],
-  });
-
-  const heartbeatsByMonitor = new Map<number, typeof allHeartbeats>();
-  for (const hb of allHeartbeats) {
-    const existing = heartbeatsByMonitor.get(hb.monitorId) || [];
-    existing.push(hb);
-    heartbeatsByMonitor.set(hb.monitorId, existing);
-  }
+  type Heartbeat = { id: number; monitorId: number; status: boolean; statusCode: number | null; responseTime: number | null; message: string | null; createdAt: Date | null };
+  const heartbeatsByMonitor = new Map<number, Heartbeat[]>();
+  await Promise.all(
+    monitorIds.map(async (monitorId) => {
+      const monitorHeartbeats = await db.query.heartbeats.findMany({
+        where: eq(heartbeats.monitorId, monitorId),
+        orderBy: [desc(heartbeats.createdAt)],
+        limit: 50,
+      });
+      heartbeatsByMonitor.set(monitorId, monitorHeartbeats);
+    })
+  );
 
   const result = allMonitors.map((monitor) => {
-    const monitorHeartbeats = heartbeatsByMonitor.get(monitor.id) || [];
-    const recentHeartbeats = monitorHeartbeats.slice(0, 50);
-    const latestHeartbeat = monitorHeartbeats[0] || null;
+    const recentHeartbeats = heartbeatsByMonitor.get(monitor.id) || [];
+    const latestHeartbeat = recentHeartbeats[0] || null;
 
     const upCount = recentHeartbeats.filter(h => h.status).length;
     const uptime = recentHeartbeats.length > 0 ? (upCount / recentHeartbeats.length) * 100 : 0;
