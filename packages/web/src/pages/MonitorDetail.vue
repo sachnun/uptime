@@ -112,6 +112,16 @@ watch(() => route.params.id, loadData)
       </div>
     </div>
 
+    <Card v-if="monitor.screenshot" class="mb-6 overflow-hidden">
+      <CardContent class="p-0">
+        <img 
+          :src="monitor.screenshot" 
+          :alt="monitor.name" 
+          class="w-full h-auto max-h-80 object-cover"
+        />
+      </CardContent>
+    </Card>
+
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
       <Card>
         <CardContent class="pt-6">
