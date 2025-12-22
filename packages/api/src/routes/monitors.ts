@@ -248,7 +248,20 @@ monitorsRoute.put('/:id', zValidator('json', updateMonitorSchema), async (c) => 
     }
   }
 
-  return c.json(result[0]);
+  const updatedMonitor = result[0];
+  const monitorType = updatedMonitor.type;
+  const monitorUrl = updatedMonitor.url;
+  if ((monitorType === 'http' || monitorType === 'https') && monitorUrl && c.env.BROWSER) {
+    c.executionCtx.waitUntil(
+      captureScreenshot(c.env.BROWSER, monitorUrl, c.env.IMGBB_API_KEY).then(async (screenshot) => {
+        if (screenshot) {
+          await db.update(monitors).set({ screenshot }).where(eq(monitors.id, id));
+        }
+      })
+    );
+  }
+
+  return c.json(updatedMonitor);
 });
 
 monitorsRoute.delete('/:id', async (c) => {
