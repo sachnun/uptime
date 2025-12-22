@@ -122,9 +122,9 @@ const monitors = await res.json();`)
           <CardTitle class="text-base sm:text-lg">Base URL</CardTitle>
         </CardHeader>
         <CardContent class="p-4 pt-0 sm:p-6 sm:pt-0">
-          <div class="flex items-center gap-2">
-            <code class="bg-muted px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm flex-1 overflow-x-auto">{{ baseUrl }}/api</code>
-            <Button variant="outline" size="icon" class="h-8 w-8 sm:h-9 sm:w-9 shrink-0" @click="copyCode(`${baseUrl}/api`, 'baseurl')">
+          <div class="flex items-center gap-2 bg-muted rounded-lg">
+            <code class="px-2 sm:px-3 py-2 text-xs sm:text-sm flex-1 overflow-x-auto">{{ baseUrl }}/api</code>
+            <Button variant="ghost" size="icon" class="bg-muted-foreground/10 h-8 w-8 sm:h-9 sm:w-9 shrink-0 mr-1" @click="copyCode(`${baseUrl}/api`, 'baseurl')">
               <Check v-if="copiedCode === 'baseurl'" class="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
               <Copy v-else class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </Button>
