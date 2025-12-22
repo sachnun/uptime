@@ -112,17 +112,18 @@ watch(() => route.params.id, loadData)
       </div>
     </div>
 
-    <Card v-if="monitor.screenshot" class="mb-6 overflow-hidden">
-      <CardContent class="p-0">
-        <img 
-          :src="monitor.screenshot" 
-          :alt="monitor.name" 
-          class="w-full h-auto max-h-80 object-cover"
-        />
-      </CardContent>
-    </Card>
+    <div :class="monitor.screenshot ? 'grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6' : 'mb-6'">
+      <Card v-if="monitor.screenshot" class="overflow-hidden">
+        <CardContent class="p-0">
+          <img 
+            :src="monitor.screenshot" 
+            :alt="monitor.name" 
+            class="w-full h-auto max-h-80 object-cover"
+          />
+        </CardContent>
+      </Card>
 
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      <div :class="monitor.screenshot ? 'grid grid-cols-2 gap-3' : 'grid grid-cols-2 sm:grid-cols-4 gap-3'">
       <Card>
         <CardContent class="pt-6">
           <div class="flex items-center gap-3">
@@ -167,6 +168,7 @@ watch(() => route.params.id, loadData)
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
 
     <Card class="mb-6">
