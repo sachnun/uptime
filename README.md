@@ -62,19 +62,6 @@ pnpm dev
 pnpm deploy
 ```
 
-## API Reference
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/auth/register` | Register (first user only) |
-| `POST` | `/api/auth/login` | Login |
-| `GET` | `/api/monitors` | List monitors |
-| `POST` | `/api/monitors` | Create monitor |
-| `GET` | `/api/monitors/:id` | Get monitor |
-| `PUT` | `/api/monitors/:id` | Update monitor |
-| `DELETE` | `/api/monitors/:id` | Delete monitor |
-| `GET` | `/api/status-pages/public/:slug` | Public status page |
-
 ## Monitor Types
 
 | Type | Description |
