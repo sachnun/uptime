@@ -31,6 +31,11 @@ const displayedHeartbeats = computed(() => {
   return reversed.slice(0, 90)
 })
 
+const maxResponseTime = computed(() => {
+  const times = displayedHeartbeats.value.map(h => h.responseTime || 0)
+  return Math.max(...times, 1)
+})
+
 async function loadData() {
   loading.value = true
   await monitorsStore.fetchMonitors()
@@ -184,7 +189,7 @@ watch(() => route.params.id, loadData)
               'flex-1 min-w-[2px] sm:min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',
               hb.status ? 'bg-success hover:bg-success/80' : 'bg-danger hover:bg-danger/80'
             )"
-              :style="{ height: `${Math.min(100, Math.max(10, (hb.responseTime || 0) / 10))}%` }"
+              :style="{ height: `${Math.max(10, ((hb.responseTime || 0) / maxResponseTime) * 100)}%` }"
               :title="`${formatMs(hb.responseTime || 0)} - ${formatDate(hb.createdAt)}`"
             />
           </div>
