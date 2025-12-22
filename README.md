@@ -1,191 +1,94 @@
 # Uptime
 
-A self-hosted uptime monitoring tool inspired by Uptime Kuma, running on Cloudflare Workers.
+Self-hosted uptime monitoring on [Cloudflare Workers](https://workers.cloudflare.com/). Inspired by [Uptime Kuma](https://github.com/louislam/uptime-kuma).
 
 ## Features
 
-- **HTTP/HTTPS Monitoring** - Check website availability and response times
-- **TCP Monitoring** - Port connectivity checks using Cloudflare Sockets
-- **DNS Monitoring** - DNS record verification via Cloudflare DoH
-- **Cron-based Checks** - Automated monitoring every minute
-- **Notifications** - Webhook, Discord, Telegram, Slack support
-- **Status Pages** - Public status pages with customizable themes
-- **Modern UI** - Vue 3 + TailwindCSS responsive dashboard
+- **Multi-protocol Monitoring** — HTTP/HTTPS, TCP, DNS
+- **Notifications** — [Discord](https://discord.com/developers/docs/resources/webhook), [Slack](https://api.slack.com/messaging/webhooks), [Telegram](https://core.telegram.org/bots/api), Webhook
+- **Status Pages** — Public status pages with custom slugs
+- **Modern Stack** — [Vue 3](https://vuejs.org/) + [Hono](https://hono.dev/) + [Drizzle ORM](https://orm.drizzle.team/)
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | Vue 3 + Vite + TailwindCSS |
-| Backend | Hono (Cloudflare Workers) |
-| Database | Cloudflare D1 + Drizzle ORM |
-| Scheduler | Cloudflare Cron Triggers |
-| Auth | JWT (stateless) |
+| Frontend | [Vue 3](https://vuejs.org/) + [Vite](https://vite.dev/) + [Tailwind CSS](https://tailwindcss.com/) |
+| Backend | [Hono](https://hono.dev/) on [Cloudflare Workers](https://workers.cloudflare.com/) |
+| Database | [Cloudflare D1](https://developers.cloudflare.com/d1/) + [Drizzle ORM](https://orm.drizzle.team/) |
+| Auth | JWT + OAuth ([GitHub](https://docs.github.com/en/apps/oauth-apps), [Google](https://developers.google.com/identity/protocols/oauth2)) |
 
-## Prerequisites
+## Quick Start
 
-- Node.js 20+
-- pnpm 8+
-- Cloudflare account
+### Prerequisites
 
-## Setup
+- [Node.js](https://nodejs.org/) 20+
+- [pnpm](https://pnpm.io/) 8+
+- [Cloudflare](https://dash.cloudflare.com/) account
 
-### 1. Clone and Install
+### Installation
 
 ```bash
-git clone <repo-url> uptime
+git clone https://github.com/your-username/uptime.git
 cd uptime
 pnpm install
 ```
 
-### 2. Create D1 Database
+### Database Setup
 
 ```bash
 cd packages/api
+
+# Create D1 database
 pnpm wrangler d1 create uptime-db
+
+# Update database_id in wrangler.jsonc, then run migrations
+pnpm db:migrate
 ```
 
-Copy the database ID from the output and update `wrangler.jsonc`:
-
-```jsonc
-{
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "uptime-db",
-      "database_id": "<YOUR_DATABASE_ID>"
-    }
-  ]
-}
-```
-
-### 3. Run Migrations
+### Development
 
 ```bash
-pnpm wrangler d1 execute uptime-db --local --file=./drizzle/0000_init.sql
-```
-
-### 4. Development
-
-Run both frontend and backend:
-
-```bash
-# Terminal 1 - API (packages/api)
-cd packages/api
-pnpm dev
-
-# Terminal 2 - Web (packages/web)
-cd packages/web
+# Run both frontend and backend
 pnpm dev
 ```
 
-Visit http://localhost:5173
+- Frontend: http://localhost:5173
+- API: http://localhost:8787
 
-### 5. Build and Deploy
+### Deploy
 
 ```bash
-# Build frontend
-cd packages/web
-pnpm build
-
-# Deploy to Cloudflare
-cd packages/api
 pnpm deploy
 ```
 
-## Configuration
+## API Reference
 
-### Environment Variables
-
-Set these in `wrangler.jsonc` or via Cloudflare dashboard:
-
-| Variable | Description |
-|----------|-------------|
-| `JWT_SECRET` | Secret key for JWT signing (change in production!) |
-
-### Cron Schedule
-
-Default: Every minute (`* * * * *`)
-
-Modify in `wrangler.jsonc`:
-
-```jsonc
-{
-  "triggers": {
-    "crons": ["* * * * *"]
-  }
-}
-```
-
-## API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/auth/register` | Create admin account (first run only) |
-| POST | `/api/auth/login` | Login and get JWT token |
-| GET | `/api/monitors` | List all monitors |
-| POST | `/api/monitors` | Create monitor |
-| GET | `/api/monitors/:id` | Get monitor details |
-| PUT | `/api/monitors/:id` | Update monitor |
-| DELETE | `/api/monitors/:id` | Delete monitor |
-| GET | `/api/heartbeats/:monitorId` | Get heartbeat history |
-| GET | `/api/notifications` | List notifications |
-| POST | `/api/notifications` | Create notification |
-| GET | `/api/status-pages/public/:slug` | Public status page |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/auth/register` | Register (first user only) |
+| `POST` | `/api/auth/login` | Login |
+| `GET` | `/api/monitors` | List monitors |
+| `POST` | `/api/monitors` | Create monitor |
+| `GET` | `/api/monitors/:id` | Get monitor |
+| `PUT` | `/api/monitors/:id` | Update monitor |
+| `DELETE` | `/api/monitors/:id` | Delete monitor |
+| `GET` | `/api/status-pages/public/:slug` | Public status page |
 
 ## Monitor Types
 
-### HTTP/HTTPS
-- URL to check
-- HTTP method (GET, POST, etc.)
-- Expected status code
-
-### TCP
-- Hostname
-- Port
-- Connection timeout
-
-### DNS
-- Hostname to resolve
-- Record type (A, AAAA, CNAME, MX, TXT, NS)
-
-## Notification Channels
-
-### Webhook
-```json
-{
-  "url": "https://your-webhook-url.com"
-}
-```
-
-### Discord
-```json
-{
-  "webhookUrl": "https://discord.com/api/webhooks/..."
-}
-```
-
-### Telegram
-```json
-{
-  "botToken": "123456:ABC-DEF...",
-  "chatId": "-1001234567890"
-}
-```
-
-### Slack
-```json
-{
-  "webhookUrl": "https://hooks.slack.com/services/..."
-}
-```
+| Type | Description |
+|------|-------------|
+| HTTP/HTTPS | URL availability, status codes, response time |
+| TCP | Port connectivity via [Cloudflare Sockets](https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/) |
+| DNS | Record verification via [Cloudflare DoH](https://developers.cloudflare.com/1.1.1.1/encryption/dns-over-https/) |
 
 ## Limitations
 
-- **No ICMP Ping** - Workers don't support raw sockets
-- **Minimum 1-minute interval** - Cron trigger limitation
-- **128MB memory limit** - Per worker invocation
+- No ICMP ping (Workers limitation)
+- Minimum 1-minute check interval ([Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/))
+- 128MB memory per invocation
 
 ## License
 
-MIT
+[MIT](LICENSE)
