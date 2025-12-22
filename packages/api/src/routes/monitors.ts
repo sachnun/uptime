@@ -178,7 +178,7 @@ monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
 
   if ((monitorData.type === 'http' || monitorData.type === 'https') && monitorData.url && c.env.BROWSER) {
     c.executionCtx.waitUntil(
-      captureScreenshot(c.env.BROWSER, monitorData.url).then(async (screenshot) => {
+      captureScreenshot(c.env.BROWSER, monitorData.url, c.env.IMGBB_API_KEY).then(async (screenshot) => {
         if (screenshot) {
           await db.update(monitors).set({ screenshot }).where(eq(monitors.id, monitor.id));
         }

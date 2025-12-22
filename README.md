@@ -5,6 +5,7 @@ Self-hosted uptime monitoring on [Cloudflare Workers](https://workers.cloudflare
 ## Features
 
 - **Multi-protocol Monitoring** — HTTP/HTTPS, TCP, DNS
+- **Screenshots** — Auto-capture via [Browser Rendering](https://developers.cloudflare.com/browser-rendering/), stored on [imgbb](https://imgbb.com/)
 - **Notifications** — [Discord](https://discord.com/developers/docs/resources/webhook), [Slack](https://api.slack.com/messaging/webhooks), [Telegram](https://core.telegram.org/bots/api), Webhook
 - **Status Pages** — Public status pages with custom slugs
 
@@ -51,6 +52,26 @@ pnpm dev
 ```bash
 pnpm deploy
 ```
+
+### Environment Variables
+
+Set these secrets in Cloudflare Workers:
+
+```bash
+cd packages/api
+
+# Required for OAuth
+npx wrangler secret put GITHUB_CLIENT_SECRET
+npx wrangler secret put GOOGLE_CLIENT_SECRET
+
+# Required for notifications
+npx wrangler secret put RESEND_API_KEY
+
+# Optional: Enable screenshot capture
+npx wrangler secret put IMGBB_API_KEY
+```
+
+Get your imgbb API key at https://api.imgbb.com/
 
 ## Monitor Types
 

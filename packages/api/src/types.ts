@@ -10,6 +10,7 @@ export type Env = {
   RESEND_API_KEY: string;
   EMAIL_FROM: string;
   MAX_MONITORS_PER_USER?: string;
+  IMGBB_API_KEY?: string;
 };
 
 export type MonitorType = 'http' | 'https' | 'tcp' | 'dns';
