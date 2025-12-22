@@ -9,12 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 
-import { Plus, Loader2, Bell, Webhook, MessageSquare, Send, Hash, Pencil, Trash2, Play } from 'lucide-vue-next'
+import { Plus, Loader2, Bell, Webhook, Mail, Pencil, Trash2, Play } from 'lucide-vue-next'
 
 interface Notification {
   id: number
   name: string
-  type: 'webhook' | 'discord' | 'telegram' | 'slack'
+  type: 'email' | 'webhook'
   config: Record<string, string>
   enabled: boolean
   createdAt: string
@@ -33,17 +33,11 @@ const form = ref({
   type: 'webhook' as Notification['type'],
   enabled: true,
   webhookUrl: '',
-  discordWebhook: '',
-  telegramBotToken: '',
-  telegramChatId: '',
-  slackWebhook: '',
 })
 
 const notificationTypes = [
   { value: 'webhook', label: 'Webhook', icon: Webhook },
-  { value: 'discord', label: 'Discord', icon: MessageSquare },
-  { value: 'telegram', label: 'Telegram', icon: Send },
-  { value: 'slack', label: 'Slack', icon: Hash },
+  { value: 'email', label: 'Email', icon: Mail },
 ]
 
 async function fetchNotifications() {
@@ -64,10 +58,6 @@ function openCreateModal() {
     type: 'webhook',
     enabled: true,
     webhookUrl: '',
-    discordWebhook: '',
-    telegramBotToken: '',
-    telegramChatId: '',
-    slackWebhook: '',
   }
   showModal.value = true
 }
@@ -78,11 +68,7 @@ function openEditModal(notification: Notification) {
     name: notification.name,
     type: notification.type,
     enabled: notification.enabled,
-    webhookUrl: notification.config.webhookUrl || '',
-    discordWebhook: notification.config.discordWebhook || '',
-    telegramBotToken: notification.config.telegramBotToken || '',
-    telegramChatId: notification.config.telegramChatId || '',
-    slackWebhook: notification.config.slackWebhook || '',
+    webhookUrl: notification.config.url || '',
   }
   showModal.value = true
 }
@@ -94,13 +80,10 @@ function closeModal() {
 }
 
 function getConfig(): Record<string, string> {
-  const configMap: Record<string, () => Record<string, string>> = {
-    webhook: () => ({ webhookUrl: form.value.webhookUrl }),
-    discord: () => ({ discordWebhook: form.value.discordWebhook }),
-    telegram: () => ({ telegramBotToken: form.value.telegramBotToken, telegramChatId: form.value.telegramChatId }),
-    slack: () => ({ slackWebhook: form.value.slackWebhook }),
+  if (form.value.type === 'webhook') {
+    return { url: form.value.webhookUrl }
   }
-  return configMap[form.value.type]?.() || {}
+  return {}
 }
 
 async function handleSubmit() {
@@ -161,9 +144,7 @@ async function handleTest(notification: Notification) {
 function getTypeIcon(type: string) {
   const iconMap: Record<string, typeof Webhook> = {
     webhook: Webhook,
-    discord: MessageSquare,
-    telegram: Send,
-    slack: Hash,
+    email: Mail,
   }
   return iconMap[type] || Webhook
 }
@@ -273,26 +254,9 @@ onMounted(fetchNotifications)
             <Input id="webhookUrl" v-model="form.webhookUrl" type="url" placeholder="https://example.com/webhook" />
           </div>
 
-          <div v-if="form.type === 'discord'" class="space-y-2">
-            <Label for="discordWebhook">Discord Webhook URL</Label>
-            <Input id="discordWebhook" v-model="form.discordWebhook" type="url" placeholder="https://discord.com/api/webhooks/..." />
-          </div>
-
-          <template v-if="form.type === 'telegram'">
-            <div class="space-y-2">
-              <Label for="telegramBotToken">Bot Token</Label>
-              <Input id="telegramBotToken" v-model="form.telegramBotToken" placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz" />
-            </div>
-            <div class="space-y-2">
-              <Label for="telegramChatId">Chat ID</Label>
-              <Input id="telegramChatId" v-model="form.telegramChatId" placeholder="-1001234567890" />
-            </div>
-          </template>
-
-          <div v-if="form.type === 'slack'" class="space-y-2">
-            <Label for="slackWebhook">Slack Webhook URL</Label>
-            <Input id="slackWebhook" v-model="form.slackWebhook" type="url" placeholder="https://hooks.slack.com/services/..." />
-          </div>
+          <p v-if="form.type === 'email'" class="text-sm text-muted-foreground">
+            Email notifications will be sent to your account email address.
+          </p>
 
           <div class="flex items-center space-x-2">
             <input

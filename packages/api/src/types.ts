@@ -6,11 +6,13 @@ export type Env = {
   GITHUB_CLIENT_SECRET: string;
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
+  RESEND_API_KEY: string;
+  EMAIL_FROM: string;
 };
 
 export type MonitorType = 'http' | 'https' | 'tcp' | 'dns';
 
-export type NotificationType = 'webhook' | 'discord' | 'telegram' | 'slack';
+export type NotificationType = 'email' | 'webhook';
 
 export type MonitorCheckResult = {
   status: boolean;

@@ -48,7 +48,7 @@ export const notifications = sqliteTable('notifications', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
-  type: text('type', { enum: ['webhook', 'discord', 'telegram', 'slack'] }).notNull(),
+  type: text('type', { enum: ['email', 'webhook'] }).notNull(),
   config: text('config', { mode: 'json' }).$type<Record<string, string>>(),
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),

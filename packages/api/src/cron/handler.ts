@@ -1,5 +1,5 @@
 import { eq, desc, and, inArray, lte, isNull, gte } from 'drizzle-orm';
-import { createDb, monitors, heartbeats, monitorNotifications, notifications, incidents, hourlyStats } from '../db';
+import { createDb, monitors, heartbeats, monitorNotifications, notifications, incidents, hourlyStats, users } from '../db';
 import { runMonitorCheck } from '../monitors';
 import { sendNotification } from '../notifications';
 import type { Env } from '../types';
@@ -112,13 +112,16 @@ export async function handleScheduled(env: Env): Promise<void> {
             await Promise.all(
               notifList.map(async (notif) => {
                 try {
+                  const user = await db.query.users.findFirst({
+                    where: eq(users.id, notif.userId),
+                  });
                   await sendNotification(notif, {
                     monitorName: monitor.name,
                     status: result.status,
                     message: result.message || (result.status ? 'Monitor is up' : 'Monitor is down'),
                     responseTime: result.responseTime,
                     url: monitor.url || undefined,
-                  });
+                  }, { env, userEmail: user?.email });
                 } catch (error) {
                   console.error(`Failed to send notification ${notif.id}:`, error);
                 }

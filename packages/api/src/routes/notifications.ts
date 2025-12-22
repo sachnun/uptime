@@ -17,7 +17,7 @@ notificationsRoute.use('*', createAuthMiddleware());
 
 const createNotificationSchema = z.object({
   name: z.string().min(1).max(100),
-  type: z.enum(['webhook', 'discord', 'telegram', 'slack']),
+  type: z.enum(['email', 'webhook']),
   config: z.record(z.string(), z.string()),
   active: z.boolean().default(true),
 });
@@ -132,7 +132,7 @@ notificationsRoute.post('/:id/test', async (c) => {
       status: true,
       message: 'This is a test notification from Uptime.',
       responseTime: 100,
-    });
+    }, { env: c.env, userEmail: user.email });
     return c.json({ success: true });
   } catch (error) {
     return c.json({ error: 'Failed to send notification', details: String(error) }, 500);
