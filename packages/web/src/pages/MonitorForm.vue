@@ -360,7 +360,7 @@ async function handleTest() {
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div class="space-y-2">
               <Label for="interval">Interval (seconds)</Label>
-              <Input id="interval" v-model.number="form.interval" type="number" min="60" />
+              <Input id="interval" v-model.number="form.interval" type="number" min="60" step="60" />
             </div>
             <div class="space-y-2">
               <Label for="timeout">Timeout (seconds)</Label>

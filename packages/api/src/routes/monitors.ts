@@ -37,7 +37,7 @@ const createMonitorSchema = z.object({
   expectedBody: z.string().max(500).optional(),
   headers: z.record(z.string(), z.string()).optional(),
   dnsRecordType: z.enum(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS']).optional(),
-  interval: z.number().int().min(60).max(86400).default(60),
+  interval: z.number().int().min(60).max(86400).multipleOf(60).default(60),
   timeout: z.number().int().min(1).max(120).default(30),
   retries: z.number().int().min(0).max(5).default(0),
   active: z.boolean().default(true),
