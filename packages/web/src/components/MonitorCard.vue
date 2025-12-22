@@ -62,7 +62,7 @@ const uptimeColor = computed(() => {
             class="w-24 h-14 object-cover rounded border border-border"
           />
         </div>
-        <div :class="cn('h-2.5 w-2.5 rounded-full shrink-0', statusConfig[status].bg)" />
+        <div v-else :class="cn('h-2.5 w-2.5 rounded-full shrink-0', statusConfig[status].bg)" />
         
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
