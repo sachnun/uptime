@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Copy, Check, ExternalLink } from 'lucide-vue-next'
+import { Copy, Check } from 'lucide-vue-next'
 
 const copiedCode = ref<string | null>(null)
 
@@ -180,22 +180,7 @@ const monitors = await res.json();`)
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader class="p-4 sm:p-6">
-          <CardTitle class="text-base sm:text-lg">Full Documentation</CardTitle>
-          <CardDescription class="text-xs sm:text-sm">Complete docs with request/response examples</CardDescription>
-        </CardHeader>
-        <CardContent class="p-4 pt-0 sm:p-6 sm:pt-0">
-          <a
-            href="https://github.com/sachnun/uptime/blob/main/docs/api.md"
-            target="_blank"
-            class="inline-flex items-center gap-2 text-primary hover:underline text-sm"
-          >
-            <ExternalLink class="h-4 w-4" />
-            View on GitHub
-          </a>
-        </CardContent>
-      </Card>
+
     </div>
   </div>
 </template>
