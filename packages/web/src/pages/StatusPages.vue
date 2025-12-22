@@ -300,7 +300,7 @@ onMounted(async () => {
               id="published"
               v-model="form.published"
               type="checkbox"
-              class="h-4 w-4 rounded border-input"
+              class="h-4 w-4 rounded border border-input bg-background text-primary accent-primary focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background cursor-pointer"
             />
             <Label for="published">Published</Label>
           </div>
