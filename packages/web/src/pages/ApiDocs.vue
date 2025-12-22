@@ -17,23 +17,6 @@ const baseUrl = computed(() => window.location.origin)
 
 const endpoints = [
   {
-    category: 'Authentication',
-    items: [
-      { method: 'GET', path: '/api/auth/github', desc: 'Redirect to GitHub OAuth', auth: false },
-      { method: 'GET', path: '/api/auth/google', desc: 'Redirect to Google OAuth', auth: false },
-      { method: 'GET', path: '/api/auth/me', desc: 'Get current user info', auth: true },
-      { method: 'DELETE', path: '/api/auth/me', desc: 'Delete account', auth: true },
-    ]
-  },
-  {
-    category: 'API Keys',
-    items: [
-      { method: 'GET', path: '/api/keys', desc: 'List all API keys', auth: true },
-      { method: 'POST', path: '/api/keys', desc: 'Create new API key', auth: true },
-      { method: 'DELETE', path: '/api/keys/:id', desc: 'Revoke API key', auth: true },
-    ]
-  },
-  {
     category: 'Monitors',
     items: [
       { method: 'GET', path: '/api/monitors', desc: 'List all monitors', auth: true },

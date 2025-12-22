@@ -1,41 +1,11 @@
 # Uptime API Documentation
 
-REST API untuk uptime monitoring service. Semua endpoint yang memerlukan autentikasi mendukung dua metode:
-
-1. **Bearer Token** - JWT dari OAuth login
-2. **API Key** - Header `x-api-key` untuk akses programmatic
+REST API untuk uptime monitoring service.
 
 ## Base URL
 
 ```
 https://your-domain.com/api
-```
-
-## Authentication
-
-### OAuth Login
-
-Redirect user ke salah satu endpoint berikut untuk login:
-
-- GitHub: `GET /api/auth/github`
-- Google: `GET /api/auth/google`
-
-Setelah login berhasil, user akan di-redirect ke `/login?token=<jwt>`.
-
-### API Key
-
-Gunakan header `x-api-key` untuk autentikasi programmatic:
-
-```bash
-curl -H "x-api-key: up_xxxx..." https://your-domain.com/api/monitors
-```
-
-API key bisa dibuat melalui halaman Settings di web UI atau via endpoint `/api/keys`.
-
-### Bearer Token
-
-```bash
-curl -H "Authorization: Bearer <jwt_token>" https://your-domain.com/api/monitors
 ```
 
 ---
@@ -53,106 +23,6 @@ Cek status API.
 {
   "status": "ok",
   "timestamp": "2024-01-15T10:30:00.000Z"
-}
-```
-
----
-
-## Authentication
-
-### `GET /api/auth/github`
-
-Redirect ke GitHub OAuth.
-
-### `GET /api/auth/google`
-
-Redirect ke Google OAuth.
-
-### `GET /api/auth/me`
-
-Ambil informasi user yang sedang login.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response:**
-```json
-{
-  "user": {
-    "id": 1,
-    "email": "user@example.com",
-    "name": "John Doe",
-    "avatar": "https://..."
-  }
-}
-```
-
-### `DELETE /api/auth/me`
-
-Hapus akun user.
-
-**Headers:** `Authorization: Bearer <token>`
-
-**Response:**
-```json
-{
-  "success": true
-}
-```
-
----
-
-## API Keys
-
-### `GET /api/keys`
-
-List semua API keys milik user.
-
-**Response:**
-```json
-[
-  {
-    "id": 1,
-    "name": "Production Server",
-    "prefix": "up_abc123...",
-    "lastUsedAt": "2024-01-15T10:30:00.000Z",
-    "expiresAt": null,
-    "createdAt": "2024-01-01T00:00:00.000Z"
-  }
-]
-```
-
-### `POST /api/keys`
-
-Buat API key baru.
-
-**Request Body:**
-```json
-{
-  "name": "My API Key",
-  "expiresAt": "2025-01-01T00:00:00.000Z"  // optional
-}
-```
-
-**Response (201):**
-```json
-{
-  "id": 1,
-  "name": "My API Key",
-  "key": "up_abc123def456...",  // hanya ditampilkan sekali!
-  "prefix": "up_abc123...",
-  "expiresAt": null,
-  "createdAt": "2024-01-01T00:00:00.000Z"
-}
-```
-
-### `DELETE /api/keys/:id`
-
-Hapus/revoke API key.
-
-**Response:**
-```json
-{
-  "success": true
 }
 ```
 
