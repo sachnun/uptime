@@ -55,7 +55,14 @@ const uptimeColor = computed(() => {
   <RouterLink :to="`/monitors/${monitor.id}`">
     <Card class="p-4 hover:border-primary/50 transition-colors cursor-pointer">
       <div class="flex items-center gap-4">
-        <div :class="cn('h-2.5 w-2.5 rounded-full', statusConfig[status].bg)" />
+        <div v-if="monitor.screenshot" class="hidden md:block shrink-0">
+          <img 
+            :src="monitor.screenshot" 
+            :alt="monitor.name" 
+            class="w-24 h-14 object-cover rounded border border-border"
+          />
+        </div>
+        <div :class="cn('h-2.5 w-2.5 rounded-full shrink-0', statusConfig[status].bg)" />
         
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">

@@ -18,6 +18,7 @@ export interface Monitor {
   timeout: number
   retries: number
   active: boolean
+  screenshot?: string
   createdAt: string
   updatedAt?: string
   latestHeartbeat?: Heartbeat

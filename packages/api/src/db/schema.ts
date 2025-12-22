@@ -30,6 +30,7 @@ export const monitors = sqliteTable('monitors', {
   active: integer('active', { mode: 'boolean' }).notNull().default(true),
   maintenanceStart: integer('maintenance_start', { mode: 'timestamp' }),
   maintenanceEnd: integer('maintenance_end', { mode: 'timestamp' }),
+  screenshot: text('screenshot'),
   createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
   updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`(unixepoch())`),
 });

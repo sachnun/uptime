@@ -2,6 +2,7 @@ export type Env = {
   DB: D1Database;
   JWT_SECRET: string;
   ASSETS: Fetcher;
+  BROWSER: Fetcher;
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
   GOOGLE_CLIENT_ID: string;

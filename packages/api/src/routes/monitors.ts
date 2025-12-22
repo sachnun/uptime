@@ -5,6 +5,7 @@ import { eq, desc, and, inArray, count } from 'drizzle-orm';
 import { createDb, monitors, heartbeats, monitorNotifications, notifications } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import { runMonitorCheck } from '../monitors';
+import { captureScreenshot } from '../lib/screenshot';
 import type { Env } from '../types';
 
 function parseId(id: string): number | null {
@@ -175,6 +176,16 @@ monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
     );
   }
 
+  if ((monitorData.type === 'http' || monitorData.type === 'https') && monitorData.url && c.env.BROWSER) {
+    c.executionCtx.waitUntil(
+      captureScreenshot(c.env.BROWSER, monitorData.url).then(async (screenshot) => {
+        if (screenshot) {
+          await db.update(monitors).set({ screenshot }).where(eq(monitors.id, monitor.id));
+        }
+      })
+    );
+  }
+
   return c.json(monitor, 201);
 });
 
@@ -322,6 +333,7 @@ monitorsRoute.post('/test', zValidator('json', testMonitorSchema), async (c) => 
     active: true,
     maintenanceStart: null,
     maintenanceEnd: null,
+    screenshot: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
