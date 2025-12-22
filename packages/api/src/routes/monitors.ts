@@ -17,25 +17,12 @@ const monitorsRoute = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 monitorsRoute.use('*', createAuthMiddleware());
 
 function extractNameFromTarget(url?: string, hostname?: string): string {
+  let host = hostname;
   if (url) {
-    const parsed = new URL(url);
-    const host = parsed.hostname;
-    const parts = host.split('.');
-    if (parts.length >= 2) {
-      const hasSubdomain = parts.length > 2 && !['www', 'api', 'm'].includes(parts[0]);
-      return hasSubdomain ? parts[0] : parts[parts.length - 2];
-    }
-    return host;
+    host = new URL(url).hostname;
   }
-  if (hostname) {
-    const parts = hostname.split('.');
-    if (parts.length >= 2) {
-      const hasSubdomain = parts.length > 2 && !['www', 'api', 'm'].includes(parts[0]);
-      return hasSubdomain ? parts[0] : parts[parts.length - 2];
-    }
-    return hostname;
-  }
-  return 'Unnamed Monitor';
+  if (!host) return 'Unnamed Monitor';
+  return host.replace(/^(www|api|m)\./, '');
 }
 
 const createMonitorSchema = z.object({

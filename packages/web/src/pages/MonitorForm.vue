@@ -260,8 +260,8 @@ async function handleTest() {
         </CardHeader>
         <CardContent class="space-y-4">
           <div class="space-y-2">
-            <Label for="name">Name</Label>
-            <Input id="name" v-model="form.name" />
+            <Label for="name">Name (optional)</Label>
+            <Input id="name" v-model="form.name" placeholder="My Website" />
           </div>
 
           <div class="space-y-2">
