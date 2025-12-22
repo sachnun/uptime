@@ -16,8 +16,30 @@ const monitorsRoute = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 monitorsRoute.use('*', createAuthMiddleware());
 
+function extractNameFromTarget(url?: string, hostname?: string): string {
+  if (url) {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+    const parts = host.split('.');
+    if (parts.length >= 2) {
+      const hasSubdomain = parts.length > 2 && !['www', 'api', 'm'].includes(parts[0]);
+      return hasSubdomain ? parts[0] : parts[parts.length - 2];
+    }
+    return host;
+  }
+  if (hostname) {
+    const parts = hostname.split('.');
+    if (parts.length >= 2) {
+      const hasSubdomain = parts.length > 2 && !['www', 'api', 'm'].includes(parts[0]);
+      return hasSubdomain ? parts[0] : parts[parts.length - 2];
+    }
+    return hostname;
+  }
+  return 'Unnamed Monitor';
+}
+
 const createMonitorSchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().min(1).max(100).optional(),
   type: z.enum(['http', 'https', 'tcp', 'dns']),
   url: z.string().url().optional(),
   hostname: z.string().optional(),
@@ -139,8 +161,10 @@ monitorsRoute.post('/', zValidator('json', createMonitorSchema), async (c) => {
     }
   }
 
+  const name = monitorData.name || extractNameFromTarget(monitorData.url, monitorData.hostname);
   const insertData = {
     ...monitorData,
+    name,
     userId: user.sub,
     maintenanceStart: maintenanceStart ? new Date(maintenanceStart) : null,
     maintenanceEnd: maintenanceEnd ? new Date(maintenanceEnd) : null,

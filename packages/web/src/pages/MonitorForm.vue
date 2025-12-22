@@ -91,11 +91,6 @@ async function loadMonitor() {
 }
 
 async function handleSubmit() {
-  if (!form.value.name) {
-    error.value = 'Name is required'
-    return
-  }
-
   if (showUrl.value && !form.value.url) {
     error.value = 'URL is required'
     return
@@ -110,11 +105,14 @@ async function handleSubmit() {
   error.value = ''
 
   const data: Partial<Monitor> = {
-    name: form.value.name,
     type: form.value.type,
     interval: form.value.interval,
     timeout: form.value.timeout,
     retries: form.value.retries,
+  }
+
+  if (form.value.name) {
+    data.name = form.value.name
   }
 
   if (showUrl.value) {
@@ -263,7 +261,7 @@ async function handleTest() {
         <CardContent class="space-y-4">
           <div class="space-y-2">
             <Label for="name">Name</Label>
-            <Input id="name" v-model="form.name" placeholder="My Website" />
+            <Input id="name" v-model="form.name" />
           </div>
 
           <div class="space-y-2">
