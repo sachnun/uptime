@@ -3,12 +3,13 @@ import { drizzle } from 'drizzle-orm/d1';
 import { eq, and } from 'drizzle-orm';
 import { z } from 'zod/v4';
 import { apiKeys } from '../db/schema';
-import { createAuthMiddleware, type AuthVariables } from './middleware';
+import { createAuthMiddleware, requireJwtAuth, type AuthVariables } from './middleware';
 import type { Env } from '../types';
 
 const apiKeysRoute = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
 apiKeysRoute.use('*', createAuthMiddleware());
+apiKeysRoute.use('*', requireJwtAuth());
 
 const encoder = new TextEncoder();
 

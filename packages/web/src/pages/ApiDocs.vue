@@ -86,9 +86,9 @@ const methodColors: Record<string, string> = {
   DELETE: 'bg-red-500/10 text-red-600 dark:text-red-400',
 }
 
-const curlExample = computed(() => `curl -H "X-API-Key: up_xxx..." ${baseUrl.value}/api/monitors`)
+const curlExample = computed(() => `curl -H "x-api-key: up_xxx..." ${baseUrl.value}/api/monitors`)
 const jsExample = computed(() => `const res = await fetch('${baseUrl.value}/api/monitors', {
-  headers: { 'X-API-Key': 'up_xxx...' }
+  headers: { 'x-api-key': 'up_xxx...' }
 });
 const monitors = await res.json();`)
 </script>
@@ -110,7 +110,7 @@ const monitors = await res.json();`)
           <div>
             <h4 class="font-medium mb-2 text-sm sm:text-base">1. API Key (Recommended)</h4>
             <p class="text-xs sm:text-sm text-muted-foreground mb-2">
-              Create an API key in Settings, then use the <code class="bg-muted px-1 sm:px-1.5 py-0.5 rounded text-xs">X-API-Key</code> header
+              Create an API key in Settings, then use the <code class="bg-muted px-1 sm:px-1.5 py-0.5 rounded text-xs">x-api-key</code> header
             </p>
             <div class="relative">
               <pre class="bg-muted p-2 sm:p-3 rounded-lg text-xs sm:text-sm overflow-x-auto"><code>{{ curlExample }}</code></pre>

@@ -13,9 +13,16 @@ async function hashApiKey(key: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+type AuthContext = {
+  req: { header: (name: string) => string | undefined; method: string };
+  env: Env;
+  set: (key: string, value: unknown) => void;
+  get: (key: string) => unknown;
+  json: (data: unknown, status?: number) => Response;
+};
+
 export function createAuthMiddleware() {
-  return async (c: { req: { header: (name: string) => string | undefined }; env: Env; set: (key: string, value: unknown) => void; json: (data: unknown, status?: number) => Response }, next: () => Promise<void>) => {
-    const authHeader = c.req.header('Authorization');
+  return async (c: AuthContext, next: () => Promise<void>) => {
     const apiKeyHeader = c.req.header('X-API-Key');
 
     if (apiKeyHeader) {
@@ -53,10 +60,12 @@ export function createAuthMiddleware() {
       };
 
       c.set('user', payload);
+      c.set('isApiKey', true);
       await next();
       return;
     }
-    
+
+    const authHeader = c.req.header('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return c.json({ error: 'Unauthorized' }, 401);
     }
@@ -69,10 +78,22 @@ export function createAuthMiddleware() {
     }
 
     c.set('user', payload);
+    c.set('isApiKey', false);
+    await next();
+  };
+}
+
+export function requireJwtAuth() {
+  return async (c: AuthContext, next: () => Promise<void>) => {
+    const isApiKey = c.get('isApiKey');
+    if (isApiKey) {
+      return c.json({ error: 'API keys are read-only. Use JWT authentication for this operation.' }, 403);
+    }
     await next();
   };
 }
 
 export type AuthVariables = {
   user: JWTPayload;
+  isApiKey: boolean;
 };

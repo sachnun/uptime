@@ -3,7 +3,7 @@
 REST API untuk uptime monitoring service. Semua endpoint yang memerlukan autentikasi mendukung dua metode:
 
 1. **Bearer Token** - JWT dari OAuth login
-2. **API Key** - Header `X-API-Key` untuk akses programmatic
+2. **API Key** - Header `x-api-key` untuk akses programmatic
 
 ## Base URL
 
@@ -24,10 +24,10 @@ Setelah login berhasil, user akan di-redirect ke `/login?token=<jwt>`.
 
 ### API Key
 
-Gunakan header `X-API-Key` untuk autentikasi programmatic:
+Gunakan header `x-api-key` untuk autentikasi programmatic:
 
 ```bash
-curl -H "X-API-Key: up_xxxx..." https://your-domain.com/api/monitors
+curl -H "x-api-key: up_xxxx..." https://your-domain.com/api/monitors
 ```
 
 API key bisa dibuat melalui halaman Settings di web UI atau via endpoint `/api/keys`.
@@ -620,17 +620,17 @@ Saat ini tidak ada rate limiting. Gunakan API secara bijak.
 
 ```bash
 # List monitors
-curl -H "X-API-Key: up_xxx..." https://your-domain.com/api/monitors
+curl -H "x-api-key: up_xxx..." https://your-domain.com/api/monitors
 
 # Create monitor
 curl -X POST \
-  -H "X-API-Key: up_xxx..." \
+  -H "x-api-key: up_xxx..." \
   -H "Content-Type: application/json" \
   -d '{"name":"My Site","type":"https","url":"https://example.com"}' \
   https://your-domain.com/api/monitors
 
 # Get uptime stats
-curl -H "X-API-Key: up_xxx..." \
+curl -H "x-api-key: up_xxx..." \
   https://your-domain.com/api/heartbeats/1/stats
 ```
 
@@ -642,7 +642,7 @@ const BASE_URL = 'https://your-domain.com/api';
 
 async function getMonitors() {
   const res = await fetch(`${BASE_URL}/monitors`, {
-    headers: { 'X-API-Key': API_KEY }
+    headers: { 'x-api-key': API_KEY }
   });
   return res.json();
 }
@@ -651,7 +651,7 @@ async function createMonitor(data: { name: string; type: string; url: string }) 
   const res = await fetch(`${BASE_URL}/monitors`, {
     method: 'POST',
     headers: {
-      'X-API-Key': API_KEY,
+      'x-api-key': API_KEY,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(data)
@@ -668,7 +668,7 @@ import requests
 API_KEY = "up_xxx..."
 BASE_URL = "https://your-domain.com/api"
 
-headers = {"X-API-Key": API_KEY}
+headers = {"x-api-key": API_KEY}
 
 # List monitors
 monitors = requests.get(f"{BASE_URL}/monitors", headers=headers).json()
