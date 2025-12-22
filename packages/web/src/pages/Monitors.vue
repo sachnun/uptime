@@ -39,7 +39,7 @@ onUnmounted(() => {
   <div>
     <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h1>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">Monitors</h1>
         <p class="text-muted-foreground text-sm sm:text-base">Monitor your services in real-time</p>
       </div>
       <Button as-child class="w-full sm:w-auto">

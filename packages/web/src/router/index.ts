@@ -17,8 +17,8 @@ const router = createRouter({
       children: [
         {
           path: '',
-          name: 'dashboard',
-          component: () => import('@/pages/Dashboard.vue'),
+          name: 'monitors',
+          component: () => import('@/pages/Monitors.vue'),
         },
         {
           path: 'monitors/:id',
@@ -75,7 +75,7 @@ router.beforeEach(async (to, _from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'login' })
   } else if (to.meta.guest && authStore.isAuthenticated) {
-    next({ name: 'dashboard' })
+    next({ name: 'monitors' })
   } else {
     next()
   }

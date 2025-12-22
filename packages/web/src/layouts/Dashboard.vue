@@ -10,7 +10,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
 import {
-  LayoutDashboard,
+  Activity,
   Bell,
   FileText,
   Settings,
@@ -32,7 +32,7 @@ const sidebarOpen = ref(true)
 const mobileMenuOpen = ref(false)
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Monitors', href: '/', icon: Activity },
   { name: 'Notifications', href: '/notifications', icon: Bell },
   { name: 'Status Pages', href: '/status-pages', icon: FileText },
   { name: 'API Docs', href: '/docs', icon: Code },

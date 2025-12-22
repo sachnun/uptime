@@ -68,7 +68,7 @@ watch(() => route.params.id, loadData)
   <div v-else-if="!monitor" class="flex flex-col items-center justify-center py-12">
     <p class="text-muted-foreground">Monitor not found</p>
     <Button class="mt-4" variant="outline" as-child>
-      <RouterLink to="/">Back to Dashboard</RouterLink>
+      <RouterLink to="/">Back to Monitors</RouterLink>
     </Button>
   </div>
 
