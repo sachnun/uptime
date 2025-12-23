@@ -1,15 +1,27 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed } from 'vue'
+import { onMounted, computed } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useMonitorsStore } from '@/stores/monitors'
+import { useLiveStatus } from '@/composables/useLiveStatus'
 import MonitorCard from '@/components/MonitorCard.vue'
+import StatusFeed from '@/components/StatusFeed.vue'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Plus, CheckCircle, XCircle, PauseCircle, BarChart3 } from 'lucide-vue-next'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Plus, CheckCircle, XCircle, PauseCircle, BarChart3, RefreshCw, Radio, WifiOff } from 'lucide-vue-next'
 import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
 const monitorsStore = useMonitorsStore()
+
+const {
+  isLive,
+  isUpdating,
+  timeSinceUpdate,
+  refresh,
+  toggle,
+} = useLiveStatus(() => monitorsStore.fetchMonitors(), 10000)
 
 const monitorStats = computed(() => {
   let up = 0, down = 0, paused = 0
@@ -21,20 +33,8 @@ const monitorStats = computed(() => {
   return { up, down, paused }
 })
 
-let interval: ReturnType<typeof setInterval> | null = null
-
 onMounted(() => {
-  monitorsStore.fetchMonitors()
   monitorsStore.fetchLimits()
-  interval = setInterval(() => {
-    monitorsStore.fetchMonitors()
-  }, 30000)
-})
-
-onUnmounted(() => {
-  if (interval) {
-    clearInterval(interval)
-  }
 })
 </script>
 
@@ -50,12 +50,56 @@ onUnmounted(() => {
         </div>
         <p class="text-muted-foreground text-sm sm:text-base">Monitor your services in real-time</p>
       </div>
-      <Button as-child class="w-full sm:w-auto">
-        <RouterLink to="/monitors/new">
-          <Plus class="h-4 w-4 mr-2" />
-          Add Monitor
-        </RouterLink>
-      </Button>
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 mr-2">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon"
+                :class="cn('h-8 w-8', isLive && 'text-success')"
+                @click="toggle"
+              >
+                <Radio v-if="isLive" class="h-4 w-4" />
+                <WifiOff v-else class="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {{ isLive ? 'Live updates enabled' : 'Live updates disabled' }}
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="h-8 w-8"
+                :disabled="isUpdating"
+                @click="refresh"
+              >
+                <RefreshCw :class="cn('h-4 w-4', isUpdating && 'animate-spin')" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span v-if="timeSinceUpdate">Updated {{ timeSinceUpdate }}</span>
+              <span v-else>Refresh</span>
+            </TooltipContent>
+          </Tooltip>
+          <span v-if="isLive" class="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-success" />
+            </span>
+            Live
+          </span>
+        </div>
+        <Button as-child class="w-full sm:w-auto">
+          <RouterLink to="/monitors/new">
+            <Plus class="h-4 w-4 mr-2" />
+            Add Monitor
+          </RouterLink>
+        </Button>
+      </div>
     </div>
 
     <div class="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
@@ -130,12 +174,17 @@ onUnmounted(() => {
       </Button>
     </Card>
 
-    <div v-else class="space-y-4">
-      <MonitorCard
-        v-for="monitor in monitorsStore.monitors"
-        :key="monitor.id"
-        :monitor="monitor"
-      />
+    <div v-else class="grid gap-6 lg:grid-cols-3">
+      <div class="lg:col-span-2 space-y-4">
+        <MonitorCard
+          v-for="monitor in monitorsStore.monitors"
+          :key="monitor.id"
+          :monitor="monitor"
+        />
+      </div>
+      <div class="hidden lg:block">
+        <StatusFeed :monitors="monitorsStore.monitors" :max-items="8" />
+      </div>
     </div>
   </div>
 </template>

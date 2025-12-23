@@ -4,11 +4,13 @@ import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useMonitorsStore } from '@/stores/monitors'
 import { useDarkMode } from '@/lib/darkMode'
+import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip'
+import { CommandPalette } from '@/components/ui/command'
 import {
   Activity,
   Bell,
@@ -22,12 +24,14 @@ import {
   Menu,
   X,
   Code,
+  Search,
 } from 'lucide-vue-next'
 
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
 const { isDark, setTheme, theme } = useDarkMode()
+const { commandPaletteOpen } = useKeyboardShortcuts()
 const sidebarOpen = ref(true)
 const mobileMenuOpen = ref(false)
 
@@ -69,6 +73,8 @@ const userInitial = computed(() => {
 <template>
   <TooltipProvider :delay-duration="0">
     <div class="min-h-screen bg-background">
+      <CommandPalette v-model:open="commandPaletteOpen" />
+
       <div
         v-if="mobileMenuOpen"
         class="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -112,6 +118,31 @@ const userInitial = computed(() => {
         </div>
 
         <nav :class="cn('flex-1 p-2', sidebarOpen ? 'space-y-1' : 'lg:flex lg:flex-col lg:items-center space-y-1')">
+          <button
+            v-if="sidebarOpen"
+            type="button"
+            class="flex w-full items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/50 px-3 py-2 text-sm text-muted-foreground hover:bg-sidebar-accent transition-colors mb-3"
+            @click="commandPaletteOpen = true"
+          >
+            <Search class="h-4 w-4" />
+            <span class="flex-1 text-left">Search...</span>
+            <kbd class="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium">
+              <span class="text-xs">⌘</span>K
+            </kbd>
+          </button>
+          <Tooltip v-if="!sidebarOpen">
+            <TooltipTrigger as-child>
+              <button
+                type="button"
+                class="flex h-10 w-10 items-center justify-center rounded-lg text-sidebar-foreground hover:bg-sidebar-accent transition-colors max-lg:hidden mb-2"
+                @click="commandPaletteOpen = true"
+              >
+                <Search class="h-4 w-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Search (⌘K)</TooltipContent>
+          </Tooltip>
+
           <template v-for="item in navigation" :key="item.name">
             <Tooltip v-if="!sidebarOpen">
               <TooltipTrigger as-child>
@@ -207,6 +238,10 @@ const userInitial = computed(() => {
         <button class="flex items-center gap-2" @click="mobileMenuOpen = true">
           <span class="font-semibold">Uptime</span>
         </button>
+        <div class="flex-1" />
+        <Button variant="ghost" size="icon" class="h-9 w-9" @click="commandPaletteOpen = true">
+          <Search class="h-4 w-4" />
+        </Button>
       </header>
 
       <main :class="cn('min-h-screen transition-all duration-300 pt-14 lg:pt-0', sidebarOpen ? 'lg:ml-64' : 'lg:ml-16')">

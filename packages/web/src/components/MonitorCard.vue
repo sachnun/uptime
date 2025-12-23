@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import type { Monitor } from '@/stores/monitors'
+import { useMonitorsStore, type Monitor } from '@/stores/monitors'
 import { formatMs } from '@/lib/utils'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Activity, Globe, Server, Wifi } from 'lucide-vue-next'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Activity, Globe, Server, Wifi, Play, Pause, Loader2 } from 'lucide-vue-next'
 
 const props = defineProps<{
   monitor: Monitor
 }>()
+
+const monitorsStore = useMonitorsStore()
+const isToggling = ref(false)
 
 const status = computed(() => {
   if (!props.monitor.active) return 'paused'
@@ -49,11 +54,28 @@ const uptimeColor = computed(() => {
   if (uptime >= 95) return 'text-warning'
   return 'text-danger'
 })
+
+async function toggleMonitor(e: Event) {
+  e.preventDefault()
+  e.stopPropagation()
+  if (isToggling.value) return
+  
+  isToggling.value = true
+  try {
+    if (props.monitor.active) {
+      await monitorsStore.pauseMonitor(props.monitor.id)
+    } else {
+      await monitorsStore.resumeMonitor(props.monitor.id)
+    }
+  } finally {
+    isToggling.value = false
+  }
+}
 </script>
 
 <template>
   <RouterLink :to="`/monitors/${monitor.id}`">
-    <Card class="p-4 hover:border-primary/50 transition-colors cursor-pointer">
+    <Card class="p-4 hover:border-primary/50 transition-colors cursor-pointer group">
       <div class="flex items-center gap-4">
         <div v-if="monitor.screenshot" class="hidden md:block shrink-0">
           <img 
@@ -78,7 +100,7 @@ const uptimeColor = computed(() => {
           </p>
         </div>
 
-        <div class="flex items-center gap-6 text-sm">
+        <div class="flex items-center gap-4 text-sm">
           <div class="text-right hidden sm:block">
             <p class="text-muted-foreground text-xs">Response</p>
             <p class="font-medium">{{ formatMs(monitor.avgResponseTime) }}</p>
@@ -92,6 +114,24 @@ const uptimeColor = computed(() => {
           <Badge :variant="statusConfig[status].variant">
             {{ statusConfig[status].text }}
           </Badge>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                :disabled="isToggling"
+                @click="toggleMonitor"
+              >
+                <Loader2 v-if="isToggling" class="h-4 w-4 animate-spin" />
+                <Play v-else-if="!monitor.active" class="h-4 w-4 text-success" />
+                <Pause v-else class="h-4 w-4 text-warning" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {{ monitor.active ? 'Pause monitor' : 'Resume monitor' }}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </Card>
