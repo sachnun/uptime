@@ -14,7 +14,6 @@ const error = ref('')
 const loading = ref(false)
 
 onMounted(async () => {
-  const token = route.query.token as string
   const errorParam = route.query.error as string
 
   if (errorParam) {
@@ -23,17 +22,12 @@ onMounted(async () => {
     return
   }
 
-  if (token) {
-    loading.value = true
-    authStore.setToken(token)
-    const success = await authStore.checkAuth()
-    if (success) {
-      router.push('/')
-    } else {
-      error.value = 'Authentication failed'
-      loading.value = false
-    }
-    window.history.replaceState({}, '', '/login')
+  loading.value = true
+  const success = await authStore.checkAuth()
+  if (success) {
+    router.push('/')
+  } else {
+    loading.value = false
   }
 })
 

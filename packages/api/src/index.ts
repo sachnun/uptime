@@ -8,10 +8,23 @@ import type { Env } from './types';
 const app = new Hono<{ Bindings: Env }>();
 
 app.use('*', logger());
+
+app.use('*', async (c, next) => {
+  c.header('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://i.ibb.co https://*.cloudinary.com; font-src 'self' data:; connect-src 'self' https://api.github.com https://oauth2.googleapis.com https://*.googleusercontent.com; frame-ancestors 'none';");
+  c.header('X-Content-Type-Options', 'nosniff');
+  c.header('X-Frame-Options', 'DENY');
+  c.header('X-XSS-Protection', '1; mode=block');
+  c.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  c.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+  await next();
+});
+
 app.use('/api/*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  credentials: true,
 }));
 
 app.route('/api/auth', auth);

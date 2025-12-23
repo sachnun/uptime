@@ -1,25 +1,17 @@
-import { useAuthStore } from '@/stores/auth'
-
 const BASE_URL = ''
 
 class ApiClient {
   private getHeaders(): HeadersInit {
-    const headers: HeadersInit = {
+    return {
       'Content-Type': 'application/json',
     }
-
-    const authStore = useAuthStore()
-    if (authStore.token) {
-      headers['Authorization'] = `Bearer ${authStore.token}`
-    }
-
-    return headers
   }
 
   async request<T>(method: string, path: string, body?: unknown): Promise<T> {
     const response = await fetch(`${BASE_URL}${path}`, {
       method,
       headers: this.getHeaders(),
+      credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
     })
 

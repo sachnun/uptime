@@ -175,7 +175,8 @@ auth.get('/github/callback', async (c) => {
       86400 * 7
     );
 
-    return c.redirect(`/login?token=${token}`);
+    c.header('Set-Cookie', `token=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${86400 * 7}`);
+    return c.redirect('/');
   } catch (error) {
     const message = error instanceof Error ? error.message : 'OAuth failed';
     return c.redirect(`/login?error=${encodeURIComponent(message)}`);
@@ -222,7 +223,8 @@ auth.get('/google/callback', async (c) => {
       86400 * 7
     );
 
-    return c.redirect(`/login?token=${token}`);
+    c.header('Set-Cookie', `token=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${86400 * 7}`);
+    return c.redirect('/');
   } catch (error) {
     const message = error instanceof Error ? error.message : 'OAuth failed';
     return c.redirect(`/login?error=${encodeURIComponent(message)}`);
@@ -277,6 +279,11 @@ auth.delete('/me', async (c) => {
   const db = createDb(c.env.DB);
   await db.delete(users).where(eq(users.id, payload.sub as number));
 
+  return c.json({ success: true });
+});
+
+auth.post('/logout', async (c) => {
+  c.header('Set-Cookie', 'token=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0');
   return c.json({ success: true });
 });
 

@@ -11,6 +11,7 @@ export type Env = {
   EMAIL_FROM: string;
   MAX_MONITORS_PER_USER?: string;
   IMGBB_API_KEY?: string;
+  ENVIRONMENT?: string;
 };
 
 export type MonitorType = 'http' | 'https' | 'tcp' | 'dns';

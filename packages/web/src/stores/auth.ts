@@ -11,44 +11,34 @@ interface User {
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
-  const token = ref<string | null>(localStorage.getItem('token'))
-
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
-
-  function setToken(newToken: string) {
-    token.value = newToken
-    localStorage.setItem('token', newToken)
-  }
+  const isAuthenticated = computed(() => !!user.value)
 
   async function checkAuth() {
-    if (!token.value) return false
-
     try {
       const response = await api.get<{ user: User }>('/api/auth/me')
       user.value = response.user
       return true
     } catch {
-      logout()
+      await logout()
       return false
     }
   }
 
-  function logout() {
-    token.value = null
+  async function logout() {
+    try {
+      await api.post('/api/auth/logout')
+    } catch {}
     user.value = null
-    localStorage.removeItem('token')
   }
 
   async function deleteAccount() {
     await api.delete('/api/auth/me')
-    logout()
+    user.value = null
   }
 
   return {
     user,
-    token,
     isAuthenticated,
-    setToken,
     checkAuth,
     logout,
     deleteAccount,

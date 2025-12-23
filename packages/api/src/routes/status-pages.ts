@@ -52,13 +52,16 @@ statusPagesRoute.get('/public/:slug', async (c) => {
   const allHeartbeats = await db.query.heartbeats.findMany({
     where: inArray(heartbeats.monitorId, monitorIds),
     orderBy: [desc(heartbeats.createdAt)],
+    limit: 1000,
   });
 
   const heartbeatsByMonitor = new Map<number, typeof allHeartbeats>();
   for (const hb of allHeartbeats) {
     const existing = heartbeatsByMonitor.get(hb.monitorId) || [];
-    existing.push(hb);
-    heartbeatsByMonitor.set(hb.monitorId, existing);
+    if (existing.length < 100) {
+      existing.push(hb);
+      heartbeatsByMonitor.set(hb.monitorId, existing);
+    }
   }
 
   const monitorsWithStatus = monitorList.map((monitor) => {

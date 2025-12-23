@@ -15,16 +15,57 @@ function parseId(id: string): number | null {
 
 const monitorsRoute = new Hono<{ Bindings: Env; Variables: AuthVariables }>();
 
-monitorsRoute.use('*', createAuthMiddleware());
+const testMonitorSchema = z.object({
+  type: z.enum(['http', 'https', 'tcp', 'dns']),
+  url: z.string().url().optional(),
+  hostname: z.string().optional(),
+  port: z.number().int().min(1).max(65535).optional(),
+  method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH']).default('GET'),
+  expectedStatus: z.number().int().min(100).max(599).default(200),
+  expectedBody: z.string().max(500).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
+  dnsRecordType: z.enum(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS']).optional(),
+  timeout: z.number().int().min(1).max(30).default(10),
+});
 
-function extractNameFromTarget(url?: string, hostname?: string): string {
-  let host = hostname;
-  if (url) {
-    host = new URL(url).hostname;
-  }
-  if (!host) return 'Unnamed Monitor';
-  return host.replace(/^(www|api|m)\./, '');
-}
+monitorsRoute.post('/test', zValidator('json', testMonitorSchema), async (c) => {
+  const data = c.req.valid('json');
+
+  const mockMonitor = {
+    id: 0,
+    userId: 0,
+    name: 'Test',
+    type: data.type,
+    url: data.url || null,
+    hostname: data.hostname || null,
+    port: data.port || null,
+    method: data.method || 'GET',
+    expectedStatus: data.expectedStatus || 200,
+    expectedBody: data.expectedBody || null,
+    headers: data.headers || null,
+    dnsRecordType: data.dnsRecordType || null,
+    interval: 60,
+    timeout: data.timeout || 10,
+    retries: 0,
+    active: true,
+    maintenanceStart: null,
+    maintenanceEnd: null,
+    screenshot: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const result = await runMonitorCheck(mockMonitor);
+
+  return c.json({
+    success: result.status,
+    statusCode: result.statusCode,
+    responseTime: result.responseTime,
+    message: result.message,
+  });
+});
+
+monitorsRoute.use('*', createAuthMiddleware());
 
 const createMonitorSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -46,18 +87,14 @@ const createMonitorSchema = z.object({
   notificationIds: z.array(z.number()).optional(),
 });
 
-const testMonitorSchema = z.object({
-  type: z.enum(['http', 'https', 'tcp', 'dns']),
-  url: z.string().url().optional(),
-  hostname: z.string().optional(),
-  port: z.number().int().min(1).max(65535).optional(),
-  method: z.enum(['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH']).default('GET'),
-  expectedStatus: z.number().int().min(100).max(599).default(200),
-  expectedBody: z.string().max(500).optional(),
-  headers: z.record(z.string(), z.string()).optional(),
-  dnsRecordType: z.enum(['A', 'AAAA', 'CNAME', 'MX', 'TXT', 'NS']).optional(),
-  timeout: z.number().int().min(1).max(30).default(10),
-});
+function extractNameFromTarget(url?: string, hostname?: string): string {
+  let host = hostname;
+  if (url) {
+    host = new URL(url).hostname;
+  }
+  if (!host) return 'Unnamed Monitor';
+  return host.replace(/^(www|api|m)\./, '');
+}
 
 const updateMonitorSchema = createMonitorSchema.partial();
 
@@ -76,17 +113,19 @@ monitorsRoute.get('/', async (c) => {
   const monitorIds = allMonitors.map(m => m.id);
 
   type Heartbeat = { id: number; monitorId: number; status: boolean; statusCode: number | null; responseTime: number | null; message: string | null; createdAt: Date | null };
+  const allHeartbeats = await db.query.heartbeats.findMany({
+    where: inArray(heartbeats.monitorId, monitorIds),
+    orderBy: [desc(heartbeats.createdAt)],
+  });
+
   const heartbeatsByMonitor = new Map<number, Heartbeat[]>();
-  await Promise.all(
-    monitorIds.map(async (monitorId) => {
-      const monitorHeartbeats = await db.query.heartbeats.findMany({
-        where: eq(heartbeats.monitorId, monitorId),
-        orderBy: [desc(heartbeats.createdAt)],
-        limit: 50,
-      });
-      heartbeatsByMonitor.set(monitorId, monitorHeartbeats);
-    })
-  );
+  for (const hb of allHeartbeats) {
+    const existing = heartbeatsByMonitor.get(hb.monitorId) || [];
+    if (existing.length < 50) {
+      existing.push(hb);
+      heartbeatsByMonitor.set(hb.monitorId, existing);
+    }
+  }
 
   const result = allMonitors.map((monitor) => {
     const recentHeartbeats = heartbeatsByMonitor.get(monitor.id) || [];
@@ -322,43 +361,6 @@ monitorsRoute.post('/:id/resume', async (c) => {
 
   await db.update(monitors).set({ active: true }).where(eq(monitors.id, id));
   return c.json({ success: true });
-});
-
-monitorsRoute.post('/test', zValidator('json', testMonitorSchema), async (c) => {
-  const data = c.req.valid('json');
-
-  const mockMonitor = {
-    id: 0,
-    userId: 0,
-    name: 'Test',
-    type: data.type,
-    url: data.url || null,
-    hostname: data.hostname || null,
-    port: data.port || null,
-    method: data.method || 'GET',
-    expectedStatus: data.expectedStatus || 200,
-    expectedBody: data.expectedBody || null,
-    headers: data.headers || null,
-    dnsRecordType: data.dnsRecordType || null,
-    interval: 60,
-    timeout: data.timeout || 10,
-    retries: 0,
-    active: true,
-    maintenanceStart: null,
-    maintenanceEnd: null,
-    screenshot: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  const result = await runMonitorCheck(mockMonitor);
-
-  return c.json({
-    success: result.status,
-    statusCode: result.statusCode,
-    responseTime: result.responseTime,
-    message: result.message,
-  });
 });
 
 monitorsRoute.get('/limits', async (c) => {
