@@ -6,6 +6,7 @@ import { formatMs, formatDate, cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import ResponseTimeChart from '@/components/ResponseTimeChart.vue'
 
 import { ArrowLeft, Loader2, Pause, Play, Pencil, Trash2, Clock, Activity, TrendingUp, Timer } from 'lucide-vue-next'
 
@@ -24,16 +25,6 @@ const status = computed(() => {
   if (monitor.value?.latestHeartbeat?.status === true) return { text: 'Up', variant: 'success' as const, color: 'bg-success' }
   if (monitor.value?.latestHeartbeat?.status === false) return { text: 'Down', variant: 'destructive' as const, color: 'bg-danger' }
   return { text: 'Pending', variant: 'secondary' as const, color: 'bg-muted-foreground' }
-})
-
-const displayedHeartbeats = computed(() => {
-  const reversed = [...heartbeats.value].reverse()
-  return reversed.slice(0, 90)
-})
-
-const maxResponseTime = computed(() => {
-  const times = displayedHeartbeats.value.map(h => h.responseTime || 0)
-  return Math.max(...times, 1)
 })
 
 async function loadData() {
@@ -176,25 +167,7 @@ watch(() => route.params.id, loadData)
       </div>
     </div>
 
-    <Card class="mb-6">
-      <CardHeader>
-        <CardTitle>Response Time (Last 24h)</CardTitle>
-      </CardHeader>
-      <CardContent>
-          <div class="flex items-end gap-0.5 h-24 overflow-hidden">
-          <div
-            v-for="hb in displayedHeartbeats"
-            :key="hb.id"
-            :class="cn(
-              'flex-1 min-w-[2px] sm:min-w-[3px] max-w-2 rounded-sm transition-all cursor-pointer',
-              hb.status ? 'bg-success hover:bg-success/80' : 'bg-danger hover:bg-danger/80'
-            )"
-              :style="{ height: `${Math.max(10, ((hb.responseTime || 0) / maxResponseTime) * 100)}%` }"
-              :title="`${formatMs(hb.responseTime || 0)} - ${formatDate(hb.createdAt)}`"
-            />
-          </div>
-      </CardContent>
-    </Card>
+    <ResponseTimeChart :monitor-id="monitorId" class="mb-6" />
 
     <Card>
       <CardHeader>

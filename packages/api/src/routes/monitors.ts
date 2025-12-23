@@ -1,8 +1,8 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
-import { eq, desc, and, inArray, count } from 'drizzle-orm';
-import { createDb, monitors, heartbeats, monitorNotifications, notifications } from '../db';
+import { eq, desc, and, inArray, count, gte, asc } from 'drizzle-orm';
+import { createDb, monitors, heartbeats, monitorNotifications, notifications, hourlyStats } from '../db';
 import { createAuthMiddleware, type AuthVariables } from './middleware';
 import { runMonitorCheck } from '../monitors';
 import { captureScreenshot } from '../lib/screenshot';
@@ -367,6 +367,73 @@ monitorsRoute.get('/limits', async (c) => {
   const maxMonitors = parseInt(c.env.MAX_MONITORS_PER_USER || '100', 10);
   const [{ total }] = await db.select({ total: count() }).from(monitors).where(eq(monitors.userId, user.sub));
   return c.json({ used: total, limit: maxMonitors });
+});
+
+const periodMap: Record<string, number> = {
+  '24h': 24 * 60 * 60 * 1000,
+  '7d': 7 * 24 * 60 * 60 * 1000,
+  '30d': 30 * 24 * 60 * 60 * 1000,
+};
+
+monitorsRoute.get('/:id/stats', async (c) => {
+  const id = parseId(c.req.param('id'));
+  if (id === null) {
+    return c.json({ error: 'Invalid monitor ID' }, 400);
+  }
+  const user = c.get('user');
+  const db = createDb(c.env.DB);
+  const period = c.req.query('period') || '24h';
+
+  const monitor = await db.query.monitors.findFirst({
+    where: and(eq(monitors.id, id), eq(monitors.userId, user.sub)),
+  });
+
+  if (!monitor) {
+    return c.json({ error: 'Monitor not found' }, 404);
+  }
+
+  const now = Date.now();
+  const periodMs = periodMap[period] || periodMap['24h'];
+  const startTime = new Date(now - periodMs);
+
+  if (period === '24h') {
+    const recentHeartbeats = await db.query.heartbeats.findMany({
+      where: and(
+        eq(heartbeats.monitorId, id),
+        gte(heartbeats.createdAt, startTime)
+      ),
+      orderBy: [asc(heartbeats.createdAt)],
+    });
+
+    return c.json({
+      period,
+      data: recentHeartbeats.map(h => ({
+        timestamp: h.createdAt?.getTime(),
+        responseTime: h.responseTime,
+        status: h.status,
+      })),
+    });
+  }
+
+  const stats = await db.query.hourlyStats.findMany({
+    where: and(
+      eq(hourlyStats.monitorId, id),
+      gte(hourlyStats.hour, now - periodMs)
+    ),
+    orderBy: [asc(hourlyStats.hour)],
+  });
+
+  return c.json({
+    period,
+    data: stats.map(s => ({
+      timestamp: s.hour,
+      responseTime: s.avgResponseTime,
+      minResponseTime: s.minResponseTime,
+      maxResponseTime: s.maxResponseTime,
+      uptimePercentage: s.uptimePercentage,
+      checkCount: s.checkCount,
+    })),
+  });
 });
 
 export { monitorsRoute };
