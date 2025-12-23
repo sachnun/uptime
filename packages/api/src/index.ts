@@ -162,17 +162,7 @@ app.get('/api/openapi.json', (c) => {
             monitorIds: { type: 'array', items: { type: 'integer' } },
           },
         },
-        ApiKey: {
-          type: 'object',
-          properties: {
-            id: { type: 'integer' },
-            name: { type: 'string' },
-            prefix: { type: 'string' },
-            lastUsedAt: { type: 'string', format: 'date-time', nullable: true },
-            expiresAt: { type: 'string', format: 'date-time', nullable: true },
-            createdAt: { type: 'string', format: 'date-time' },
-          },
-        },
+
       },
     },
     security: [{ apiKey: [] }, { bearerAuth: [] }],
@@ -375,27 +365,6 @@ app.get('/api/openapi.json', (c) => {
           summary: 'Delete status page',
           parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
           responses: { '200': { description: 'Success' } },
-        },
-      },
-      '/keys': {
-        get: {
-          tags: ['API Keys'],
-          summary: 'List API keys',
-          responses: { '200': { description: 'List of API keys', content: { 'application/json': { schema: { type: 'array', items: { $ref: '#/components/schemas/ApiKey' } } } } } },
-        },
-        post: {
-          tags: ['API Keys'],
-          summary: 'Create new API key',
-          requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['name'], properties: { name: { type: 'string', minLength: 1, maxLength: 100 }, expiresAt: { type: 'string', format: 'date-time' } } } } } },
-          responses: { '201': { description: 'Created API key (includes full key, shown only once)' } },
-        },
-      },
-      '/keys/{id}': {
-        delete: {
-          tags: ['API Keys'],
-          summary: 'Delete API key',
-          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
-          responses: { '200': { description: 'Success' }, '404': { description: 'Not found' } },
         },
       },
       '/health': {
