@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Copy, Check } from 'lucide-vue-next'
+import { Copy, Check, FileJson, ExternalLink } from 'lucide-vue-next'
 
 const copiedCode = ref<string | null>(null)
 
@@ -14,6 +14,11 @@ async function copyCode(code: string, id: string) {
 }
 
 const baseUrl = computed(() => window.location.origin)
+const openApiUrl = computed(() => `${baseUrl.value}/api/openapi.json`)
+
+function openSwaggerEditor() {
+  window.open(`https://editor.swagger.io/?url=${encodeURIComponent(openApiUrl.value)}`, '_blank')
+}
 
 const endpoints = [
   {
@@ -78,9 +83,21 @@ const monitors = await res.json();`)
 
 <template>
   <div>
-    <div class="mb-6">
-      <h1 class="text-xl sm:text-2xl font-bold tracking-tight">API Documentation</h1>
-      <p class="text-muted-foreground text-sm sm:text-base">REST API reference for programmatic access</p>
+    <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight">API Documentation</h1>
+        <p class="text-muted-foreground text-sm sm:text-base">REST API reference for programmatic access</p>
+      </div>
+      <div class="flex gap-2">
+        <Button variant="outline" size="sm" as="a" :href="openApiUrl" target="_blank" class="gap-1.5">
+          <FileJson class="h-4 w-4" />
+          <span class="hidden sm:inline">OpenAPI</span> JSON
+        </Button>
+        <Button variant="outline" size="sm" @click="openSwaggerEditor" class="gap-1.5">
+          <ExternalLink class="h-4 w-4" />
+          <span class="hidden sm:inline">Swagger</span> Editor
+        </Button>
+      </div>
     </div>
 
     <div class="space-y-4 sm:space-y-6">
