@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 import { Clock, Key, Download, Trash2, Loader2, Plus, Copy, Check } from 'lucide-vue-next'
+import { useToast } from '@/composables/useToast'
 
 type ApiKey = {
   id: number
@@ -28,6 +29,7 @@ type NewApiKey = ApiKey & { key: string }
 const router = useRouter()
 const authStore = useAuthStore()
 const { theme, setTheme } = useDarkMode()
+const { toast } = useToast()
 
 const deleteDialogOpen = ref(false)
 const confirmText = ref('')
@@ -78,6 +80,9 @@ async function handleCreateKey() {
       createdAt: created.createdAt,
     })
     newKeyName.value = ''
+    toast({ title: 'API key created', variant: 'success' })
+  } catch (e) {
+    toast({ title: 'Failed to create API key', variant: 'destructive' })
   } finally {
     creatingKey.value = false
   }
@@ -88,6 +93,9 @@ async function handleDeleteKey(id: number) {
   try {
     await api.delete(`/api/keys/${id}`)
     apiKeys.value = apiKeys.value.filter(k => k.id !== id)
+    toast({ title: 'API key deleted', variant: 'success' })
+  } catch (e) {
+    toast({ title: 'Failed to delete API key', variant: 'destructive' })
   } finally {
     deletingKeyId.value = null
   }
@@ -96,6 +104,7 @@ async function handleDeleteKey(id: number) {
 async function copyToClipboard(text: string) {
   await navigator.clipboard.writeText(text)
   copiedKey.value = true
+  toast({ title: 'Copied to clipboard', variant: 'success' })
   setTimeout(() => { copiedKey.value = false }, 2000)
 }
 

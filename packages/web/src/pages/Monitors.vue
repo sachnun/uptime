@@ -6,7 +6,8 @@ import MonitorCard from '@/components/MonitorCard.vue'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Plus, CheckCircle, XCircle, PauseCircle, BarChart3, Loader2 } from 'lucide-vue-next'
+import { Plus, CheckCircle, XCircle, PauseCircle, BarChart3 } from 'lucide-vue-next'
+import { Skeleton } from '@/components/ui/skeleton'
 
 const monitorsStore = useMonitorsStore()
 
@@ -101,9 +102,20 @@ onUnmounted(() => {
       </Card>
     </div>
 
-    <div v-if="monitorsStore.loading && monitorsStore.monitors.length === 0" class="flex flex-col items-center justify-center py-12">
-      <Loader2 class="h-8 w-8 animate-spin text-primary" />
-      <p class="mt-4 text-muted-foreground">Loading monitors...</p>
+    <div v-if="monitorsStore.loading && monitorsStore.monitors.length === 0" class="space-y-4">
+      <Card v-for="i in 3" :key="i" class="p-4">
+        <div class="flex items-center gap-4">
+          <Skeleton class="h-12 w-12 rounded-lg" />
+          <div class="flex-1 space-y-2">
+            <Skeleton class="h-4 w-[200px]" />
+            <Skeleton class="h-3 w-[150px]" />
+          </div>
+          <div class="hidden sm:flex items-center gap-4">
+            <Skeleton class="h-8 w-16" />
+            <Skeleton class="h-8 w-20" />
+          </div>
+        </div>
+      </Card>
     </div>
 
     <Card v-else-if="monitorsStore.monitors.length === 0" class="flex flex-col items-center justify-center py-12">

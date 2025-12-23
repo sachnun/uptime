@@ -10,6 +10,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 
 import { Plus, Loader2, Bell, Webhook, Mail, Pencil, Trash2, Play } from 'lucide-vue-next'
+import { useToast } from '@/composables/useToast'
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog'
 
 interface Notification {
   id: number
@@ -27,6 +39,9 @@ const editing = ref<Notification | null>(null)
 const saving = ref(false)
 const testing = ref<number | null>(null)
 const error = ref('')
+const deleteTarget = ref<Notification | null>(null)
+const deleting = ref(false)
+const { toast } = useToast()
 
 const form = ref({
   name: '',
@@ -107,26 +122,33 @@ async function handleSubmit() {
       const updated = await api.put<Notification>(`/api/notifications/${editing.value.id}`, data)
       const index = notifications.value.findIndex(n => n.id === editing.value!.id)
       if (index !== -1) notifications.value[index] = updated
+      toast({ title: 'Notification updated', variant: 'success' })
     } else {
       const created = await api.post<Notification>('/api/notifications', data)
       notifications.value.unshift(created)
+      toast({ title: 'Notification created', variant: 'success' })
     }
     closeModal()
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to save notification'
+    toast({ title: 'Failed to save notification', variant: 'destructive' })
   } finally {
     saving.value = false
   }
 }
 
 async function handleDelete(notification: Notification) {
-  if (!confirm(`Delete notification "${notification.name}"?`)) return
-  
+  deleting.value = true
   try {
     await api.delete(`/api/notifications/${notification.id}`)
     notifications.value = notifications.value.filter(n => n.id !== notification.id)
+    toast({ title: 'Notification deleted', variant: 'success' })
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to delete notification'
+    toast({ title: 'Failed to delete notification', variant: 'destructive' })
+  } finally {
+    deleting.value = false
+    deleteTarget.value = null
   }
 }
 
@@ -134,8 +156,10 @@ async function handleTest(notification: Notification) {
   testing.value = notification.id
   try {
     await api.post(`/api/notifications/${notification.id}/test`)
+    toast({ title: 'Test sent successfully', variant: 'success' })
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Test failed'
+    toast({ title: 'Test failed', variant: 'destructive' })
   } finally {
     testing.value = null
   }
@@ -210,9 +234,28 @@ onMounted(fetchNotifications)
             <Button variant="outline" size="sm" @click="openEditModal(notification)">
               <Pencil class="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm" class="text-destructive hover:text-destructive" @click="handleDelete(notification)">
-              <Trash2 class="h-4 w-4" />
-            </Button>
+            <AlertDialog :open="deleteTarget?.id === notification.id" @update:open="val => !val && (deleteTarget = null)">
+              <AlertDialogTrigger as-child>
+                <Button variant="ghost" size="sm" class="text-destructive hover:text-destructive" @click="deleteTarget = notification">
+                  <Trash2 class="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete Notification</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete "{{ notification.name }}"? This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction class="bg-destructive text-destructive-foreground hover:bg-destructive/90" :disabled="deleting" @click="handleDelete(notification)">
+                    <Loader2 v-if="deleting" class="h-4 w-4 mr-2 animate-spin" />
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </Card>

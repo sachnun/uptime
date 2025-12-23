@@ -9,10 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 import { ArrowLeft, Loader2, PlayCircle, CheckCircle, XCircle, Plus, Trash2 } from 'lucide-vue-next'
+import { useToast } from '@/composables/useToast'
 
 const route = useRoute()
 const router = useRouter()
 const monitorsStore = useMonitorsStore()
+const { toast } = useToast()
 
 const isEdit = computed(() => !!route.params.id)
 const monitorId = computed(() => parseInt(route.params.id as string))
@@ -141,13 +143,16 @@ async function handleSubmit() {
   try {
     if (isEdit.value) {
       await monitorsStore.updateMonitor(monitorId.value, data)
+      toast({ title: 'Monitor updated', variant: 'success' })
       router.push(`/monitors/${monitorId.value}`)
     } else {
       const monitor = await monitorsStore.createMonitor(data)
+      toast({ title: 'Monitor created', variant: 'success' })
       router.push(`/monitors/${(monitor as Monitor).id}`)
     }
   } catch (e) {
     error.value = e instanceof Error ? e.message : 'Failed to save monitor'
+    toast({ title: 'Failed to save monitor', variant: 'destructive' })
   } finally {
     saving.value = false
   }
