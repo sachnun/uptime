@@ -172,9 +172,11 @@ const chartOptions = computed<ChartOptions<'line'>>(() => ({
 
 async function fetchStats() {
   loading.value = true
-  const response = await api.get<StatsResponse>(`/monitors/${props.monitorId}/stats?period=${selectedPeriod.value}`)
-  if (response.data) {
-    statsData.value = response.data
+  try {
+    const response = await api.get<StatsResponse>(`/monitors/${props.monitorId}/stats?period=${selectedPeriod.value}`)
+    statsData.value = response.data ?? []
+  } catch {
+    statsData.value = []
   }
   loading.value = false
 }
