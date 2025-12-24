@@ -21,9 +21,9 @@ app.use('*', async (c, next) => {
 });
 
 app.use('/api/*', cors({
-  origin: '*',
+  origin: (origin) => origin || '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'Cookie'],
   credentials: true,
 }));
 
