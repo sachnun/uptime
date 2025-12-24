@@ -6,6 +6,16 @@ import { apiKeys, users } from '../db/schema';
 
 const encoder = new TextEncoder();
 
+function getCookie(req: { header: (name: string) => string | undefined }, name: string): string | undefined {
+  const cookieHeader = req.header('Cookie');
+  if (!cookieHeader) return undefined;
+
+  const cookies = cookieHeader.split(';').map((c) => c.trim());
+  const targetCookie = cookies.find((c) => c.startsWith(`${name}=`));
+
+  return targetCookie?.split('=')[1];
+}
+
 async function hashApiKey(key: string): Promise<string> {
   const data = encoder.encode(key);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -66,11 +76,14 @@ export function createAuthMiddleware() {
     }
 
     const authHeader = c.req.header('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    const tokenCookie = getCookie(c.req, 'token');
+
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : tokenCookie;
+
+    if (!token) {
       return c.json({ error: 'Unauthorized' }, 401);
     }
 
-    const token = authHeader.slice(7);
     const payload = await verifyJWT(token, c.env.JWT_SECRET);
 
     if (!payload) {
